@@ -81,24 +81,26 @@ Question de l'utilisateur :
     total_tokens = 0
 
     # Tool-use loop (max MAX_TOOL_CALLS iterations)
+    tool_calls_made = 0
     for _i in range(MAX_TOOL_CALLS + 1):
+        use_tools = tools if tools and tool_calls_made < MAX_TOOL_CALLS else []
         response = client.messages.create(
             model=model,
             max_tokens=2048,
             system=SYSTEM_PROMPT,
             messages=messages,  # type: ignore[arg-type]
-            tools=tools if tools else anthropic.NOT_GIVEN,  # type: ignore[arg-type]
+            tools=use_tools if use_tools else anthropic.NOT_GIVEN,  # type: ignore[arg-type]
         )
 
         total_tokens += response.usage.input_tokens + response.usage.output_tokens
 
         # Check if the LLM wants to use a tool
         if response.stop_reason == "tool_use" and odoo_client is not None:
-            # Process tool calls
             tool_results = []
             for block in response.content:
                 if block.type == "tool_use":
-                    logger.info("Tool call", tool=block.name, input=block.input)
+                    tool_calls_made += 1
+                    logger.info("Tool call", tool=block.name, call=tool_calls_made)
                     result = await execute_tool(
                         block.name,
                         block.input,
@@ -114,18 +116,16 @@ Question de l'utilisateur :
                         }
                     )
 
-            # Feed results back to LLM
             messages.append({"role": "assistant", "content": response.content})
             messages.append({"role": "user", "content": tool_results})
         else:
-            # Final response — extract text
             break
 
+    # Extract text from final response
     raw_text = ""
     for block in response.content:
-        if hasattr(block, "text"):
-            raw_text = block.text
-            break
+        if hasattr(block, "text") and block.text:
+            raw_text += block.text
 
     logger.info("BA Agent responded", domain=profile.domain_id, tokens=total_tokens)
 

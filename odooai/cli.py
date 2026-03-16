@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 from odooai import __version__
+from odooai._cli_display import print_field_detail, print_model_detail, print_module_summary
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -47,6 +48,13 @@ def main(argv: list[str] | None = None) -> None:
     p_check.add_argument("field", nargs="?", help="Field name (e.g. amount_total)")
     p_check.add_argument("--version-tag", default="17.0", help="Odoo version (default: 17.0)")
 
+    # generate-ba: generate a BA Profile for a domain
+    p_ba = sub.add_parser("generate-ba", help="Generate a BA Profile for a functional domain")
+    p_ba.add_argument("domain", help="Domain ID (e.g. sales_crm, supply_chain)")
+    p_ba.add_argument("--version-tag", default="17.0", help="Odoo version (default: 17.0)")
+    p_ba.add_argument("--model", default="claude-sonnet-4-20250514", help="LLM model")
+    p_ba.add_argument("--save", action="store_true", help="Save BA Profile to knowledge_store/")
+
     # serve: run the API server
     sub.add_parser("serve", help="Run the OdooAI API server")
 
@@ -56,12 +64,77 @@ def main(argv: list[str] | None = None) -> None:
         _cmd_analyze(args)
     elif args.command == "analyze-all":
         _cmd_analyze_all(args)
+    elif args.command == "generate-ba":
+        _cmd_generate_ba(args)
     elif args.command == "check-kg":
         _cmd_check_kg(args)
     elif args.command == "serve":
         _cmd_serve()
     else:
         parser.print_help()
+
+
+def _cmd_generate_ba(args: argparse.Namespace) -> None:
+    """Generate a BA Profile for a functional domain."""
+    import asyncio
+
+    from odooai.config import get_settings
+    from odooai.knowledge.ba_factory import DOMAINS, generate_ba_profile
+    from odooai.knowledge.storage import load_module_kg
+
+    if args.domain not in DOMAINS:
+        print(f"Unknown domain: {args.domain}", file=sys.stderr)
+        print(f"Available: {list(DOMAINS.keys())}")
+        sys.exit(1)
+
+    settings = get_settings()
+    api_key = settings.anthropic_api_key
+    if not api_key:
+        print("Error: ANTHROPIC_API_KEY not set in .env", file=sys.stderr)
+        sys.exit(1)
+
+    # Load KGs for the domain's modules
+    modules = DOMAINS[args.domain]
+    kgs = []
+    for mod in modules:
+        kg = load_module_kg(mod, args.version_tag)
+        if kg:
+            kgs.append(kg)
+            print(f"Loaded KG: {mod} ({len(kg.models)} models)")
+
+    if not kgs:
+        print(f"No KGs found for domain {args.domain}. Run 'odooai analyze --save' first.")
+        sys.exit(1)
+
+    print(f"\nGenerating BA Profile for '{args.domain}' using {args.model}...")
+    profile = asyncio.run(
+        generate_ba_profile(args.domain, kgs, api_key, model=args.model),
+    )
+
+    print(f"\n{'=' * 60}")
+    print(f"BA Profile: {profile.domain_name}")
+    print(f"{'=' * 60}")
+    print(f"\n{profile.summary}")
+    print(f"\nCapabilities ({len(profile.capabilities)}):")
+    for c in profile.capabilities:
+        print(f"  - {c.name}: {c.description[:80]}...")
+    print(f"\nFeature Discoveries ({len(profile.feature_discoveries)}):")
+    for f in profile.feature_discoveries:
+        print(f"  - {f.name} ({f.complexity})")
+        print(f"    {f.business_value[:80]}")
+    print(f"\nGotchas ({len(profile.gotchas)}):")
+    for g in profile.gotchas:
+        print(f"  - {g.description[:80]}")
+    print(f"\nTokens used: {profile.token_count}")
+
+    if args.save:
+        from pathlib import Path
+
+        store = Path("knowledge_store") / args.version_tag / "_ba_profiles"
+        store.mkdir(parents=True, exist_ok=True)
+        out = store / f"{args.domain}.json"
+        out.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
+        print(f"\nSaved to: {out}")
 
 
 def _cmd_analyze(args: argparse.Namespace) -> None:
@@ -83,7 +156,7 @@ def _cmd_analyze(args: argparse.Namespace) -> None:
         print(kg.model_dump_json(indent=2))
         return
 
-    _print_module_summary(kg)
+    print_module_summary(kg)
 
     if args.save:
         path = save_module_kg(kg, args.version_tag)
@@ -152,7 +225,7 @@ def _cmd_check_kg(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     if not args.model:
-        _print_module_summary(kg)
+        print_module_summary(kg)
         return
 
     model = next((m for m in kg.models if m.name == args.model), None)
@@ -162,7 +235,7 @@ def _cmd_check_kg(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     if not args.field:
-        _print_model_detail(model)
+        print_model_detail(model)
         return
 
     field = model.fields.get(args.field)
@@ -171,7 +244,7 @@ def _cmd_check_kg(args: argparse.Namespace) -> None:
         print(f"Available: {sorted(model.fields.keys())}")
         sys.exit(1)
 
-    _print_field_detail(field)
+    print_field_detail(field)
 
 
 def _cmd_serve() -> None:
@@ -179,102 +252,3 @@ def _cmd_serve() -> None:
     import uvicorn
 
     uvicorn.run("odooai.main:app", host="0.0.0.0", port=8000, reload=True)
-
-
-def _print_module_summary(kg: object) -> None:
-    """Print a human-readable summary of a Knowledge Graph."""
-    from odooai.knowledge.schemas.index import ModuleKnowledgeGraph
-
-    if not isinstance(kg, ModuleKnowledgeGraph):
-        return
-
-    print(f"Module:      {kg.manifest.name} ({kg.manifest.technical_name})")
-    print(f"Version:     {kg.manifest.version}")
-    print(f"Category:    {kg.manifest.category}")
-    print(f"Depends:     {', '.join(kg.manifest.depends)}")
-    print(f"Models:      {len(kg.models)}")
-    total_fields = sum(len(m.fields) for m in kg.models)
-    print(f"Fields:      {total_fields}")
-    print(f"Actions:     {len(kg.action_methods)}")
-    print(f"Constraints: {len(kg.sql_constraints)} SQL, {len(kg.python_constraints)} Python")
-    print(f"Views:       {len(kg.views)}")
-    print(f"ACLs:        {len(kg.access_rights)}")
-    print(f"Menus:       {len(kg.menus)}")
-
-    if kg.models:
-        print("\nModels:")
-        for m in kg.models:
-            ext = " [EXT]" if m.is_extension else ""
-            trans = " [WIZARD]" if m.is_transient else ""
-            print(f"  {m.name}{ext}{trans} — {len(m.fields)} fields")
-
-
-def _print_model_detail(model: object) -> None:
-    """Print detailed model information."""
-    from odooai.knowledge.schemas.models import ModelDefinition
-
-    if not isinstance(model, ModelDefinition):
-        return
-
-    print(f"Model:       {model.name}")
-    print(f"Description: {model.description}")
-    if model.inherit:
-        print(f"Inherits:    {', '.join(model.inherit)}")
-    if model.inherits:
-        print(f"Delegates:   {model.inherits}")
-    if model.is_extension:
-        print("Type:        Extension (no _name)")
-    if model.is_transient:
-        print("Type:        TransientModel (wizard)")
-    print(f"Fields ({len(model.fields)}):")
-    for fname, f in sorted(model.fields.items()):
-        extras: list[str] = []
-        if f.required:
-            extras.append("required")
-        if f.readonly:
-            extras.append("readonly")
-        if f.compute:
-            extras.append(f"compute={f.compute}")
-        if f.related:
-            extras.append(f"related={f.related}")
-        if f.relation:
-            extras.append(f"-> {f.relation}")
-        if not f.store:
-            extras.append("not stored")
-        info = f" ({', '.join(extras)})" if extras else ""
-        print(f"  {fname}: {f.type}{info}")
-
-
-def _print_field_detail(field: object) -> None:
-    """Print detailed field information."""
-    from odooai.knowledge.schemas.models import FieldDefinition
-
-    if not isinstance(field, FieldDefinition):
-        return
-
-    print(f"Field:    {field.name}")
-    print(f"Type:     {field.type}")
-    if field.string:
-        print(f"Label:    {field.string}")
-    print(f"Required: {field.required}")
-    print(f"Readonly: {field.readonly}")
-    print(f"Stored:   {field.store}")
-    if field.compute:
-        print(f"Compute:  {field.compute}")
-    if field.depends:
-        print(f"Depends:  {', '.join(field.depends)}")
-    if field.related:
-        print(f"Related:  {field.related}")
-    if field.relation:
-        print(f"Relation: {field.relation}")
-    if field.selection:
-        if isinstance(field.selection, str):
-            print(f"Selection: {field.selection} (method)")
-        else:
-            print("Selection:")
-            for item in field.selection:
-                print(f"  {item[0]}: {item[1]}" if len(item) >= 2 else f"  {item}")
-    if field.default:
-        print(f"Default:  {field.default}")
-    if field.help:
-        print(f"Help:     {field.help}")

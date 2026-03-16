@@ -129,10 +129,13 @@ Question de l'utilisateur :
             for block in collected_content:
                 if block.type == "tool_use":
                     tool_calls_made += 1
+                    inp = block.input if isinstance(block.input, dict) else {}
+                    odoo_model = inp.get("model", "")
                     yield {
                         "type": "tool_start",
                         "tool": block.name,
                         "message": _tool_message(block.name),
+                        "model": odoo_model,
                     }
                     result = await execute_tool(
                         block.name,

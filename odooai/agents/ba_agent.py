@@ -45,7 +45,32 @@ QUAND TU UTILISES DES OUTILS :
 - Ventes : sale.order, res.config.settings, product.pricelist
 - Comptabilite : account.move, account.payment.term, res.company
 - Limite tes requetes aux donnees pertinentes
-- Ne fais PAS plus de tool calls que necessaire"""
+- Ne fais PAS plus de tool calls que necessaire
+
+EXEMPLE DE BONNE REPONSE :
+
+Question : "Quelles fonctionnalites de stock je n'utilise pas ?"
+
+Reponse :
+## Diagnostic de votre configuration Stock
+
+Votre entrepot est configure en **1 etape** pour la reception et la livraison.
+
+### Fonctionnalites a activer
+
+**1. Reception en 3 etapes** (Intermediaire)
+- Chemin : Inventaire > Configuration > Entrepots > Etapes de reception
+- Benefice : controle qualite avant mise en stock, -30% erreurs inventaire
+- Source : stock.warehouse.reception_steps
+
+**2. Regles de reapprovisionnement** (Facile)
+- Chemin : Inventaire > Configuration > Regles de reapprovisionnement
+- Benefice : commandes fournisseur automatiques quand stock < seuil
+- Source : stock.warehouse.orderpoint
+
+### Actions prioritaires
+1. Activer la reception 3 etapes (10 min)
+2. Configurer 5 regles de reapprovisionnement sur vos produits cles"""
 
 DISCLAIMER = (
     "\n\n---\n*OdooAI ne fournit pas de conseil juridique, fiscal ou comptable. "

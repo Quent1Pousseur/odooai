@@ -24,8 +24,21 @@ def connect_odoo(url: str, db: str) -> tuple[Any, int, str]:
     login = input("Login Odoo : ").strip()
     odoo_key = getpass.getpass("API Key Odoo : ")
 
-    client = OdooClient(base_url=url, db=db, api_type=OdooApiType.JSON2)
-    print("Connexion en cours...")
+    # Auto-detect protocol: try version endpoint, use XML-RPC for Odoo <19
+    print("Detection de la version...")
+    tmp_client = OdooClient(base_url=url, db=db, api_type=OdooApiType.JSON2)
+    version = asyncio.run(tmp_client.get_server_version())
+
+    if version and int(version.split(".")[0]) >= 19:
+        api_type = OdooApiType.JSON2
+        print(f"Odoo {version} detecte → JSON-2")
+    else:
+        api_type = OdooApiType.XML_RPC
+        v_display = version or "inconnue"
+        print(f"Odoo {v_display} detecte → XML-RPC")
+
+    client = OdooClient(base_url=url, db=db, api_type=api_type)
+    print("Authentification...")
 
     try:
         user_info = asyncio.run(client.authenticate(login, odoo_key))

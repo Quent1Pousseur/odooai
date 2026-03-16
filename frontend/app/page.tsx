@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "@/components/chat-message";
 import { ChatInput } from "@/components/chat-input";
+import { OdooConnect } from "@/components/odoo-connect";
 import { Sidebar } from "@/components/sidebar";
 
 interface Message {
@@ -29,6 +30,7 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [odooCreds, setOdooCreds] = useState<{url: string; db: string; login: string; apiKey: string} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,7 +74,16 @@ export default function ChatPage() {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: question, conversation_id: currentConversationId }),
+        body: JSON.stringify({
+          message: question,
+          conversation_id: currentConversationId,
+          ...(odooCreds ? {
+            odoo_url: odooCreds.url,
+            odoo_db: odooCreds.db,
+            odoo_login: odooCreds.login,
+            odoo_api_key: odooCreds.apiKey,
+          } : {}),
+        }),
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -143,9 +154,16 @@ export default function ChatPage() {
       />
 
       <div className="flex flex-col flex-1 min-w-0">
-        <header className="bg-primary text-white p-4 text-center">
-          <h1 className="text-xl font-semibold">OdooAI</h1>
-          <p className="text-sm text-accent">Votre Odoo peut faire plus.</p>
+        <header className="bg-primary text-white p-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">OdooAI</h1>
+            <p className="text-sm text-accent">Votre Odoo peut faire plus.</p>
+          </div>
+          <OdooConnect
+            isConnected={odooCreds !== null}
+            onConnect={(creds) => setOdooCreds(creds)}
+            onDisconnect={() => setOdooCreds(null)}
+          />
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">

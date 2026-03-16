@@ -16,6 +16,7 @@ from odooai.api.middleware import request_id_middleware
 from odooai.api.routers.chat import router as chat_router
 from odooai.api.routers.conversations import router as conversations_router
 from odooai.api.routers.health import router as health_router
+from odooai.api.routers.waitlist import router as waitlist_router
 from odooai.config import get_settings
 from odooai.domain.entities.connection import OdooApiType
 from odooai.infrastructure.cache.redis_client import RedisClient
@@ -102,6 +103,7 @@ def create_app() -> FastAPI:
     application.include_router(health_router)
     application.include_router(chat_router)
     application.include_router(conversations_router)
+    application.include_router(waitlist_router)
 
     return application
 

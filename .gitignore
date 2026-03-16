@@ -60,3 +60,4 @@ knowledge_store/**/*.json
 # OS
 Thumbs.db
 .DS_Store
+waitlist.json

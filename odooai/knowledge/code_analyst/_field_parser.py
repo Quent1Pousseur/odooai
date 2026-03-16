@@ -96,14 +96,17 @@ def _extract_call_kwargs(call: ast.Call) -> dict[str, Any]:
 
     # First positional arg is often comodel_name or selection
     if call.args:
+        first_arg = call.args[0]
         try:
-            first = ast.literal_eval(call.args[0])
+            first = ast.literal_eval(first_arg)
             if isinstance(first, str):
                 kwargs["comodel_name"] = first
             elif isinstance(first, list):
                 kwargs["selection"] = first
         except (ValueError, TypeError):
-            pass
+            # Non-literal first arg: could be a method reference for selection
+            if isinstance(first_arg, ast.Name):
+                kwargs["selection"] = first_arg.id
 
     for kw in call.keywords:
         if kw.arg is None:

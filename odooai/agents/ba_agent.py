@@ -41,7 +41,7 @@ STRUCTURE DE REPONSE :
 
 QUAND TU UTILISES DES OUTILS :
 - Config : ir.config_parameter, stock.warehouse, res.config.settings
-- Stock : stock.warehouse, stock.location, stock.warehouse.orderpoint
+- Stock : stock.warehouse, stock.location, stock.warehouse.orderpoint, stock.route
 - Ventes : sale.order, res.config.settings, product.pricelist
 - Comptabilite : account.move, account.payment.term, res.company
 - Limite tes requetes aux donnees pertinentes

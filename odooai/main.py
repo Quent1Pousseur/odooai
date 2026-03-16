@@ -16,7 +16,8 @@ from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from odooai.api.dependencies import wire
-from odooai.api.middleware import request_id_middleware
+from odooai.api.middleware import auth_middleware, request_id_middleware
+from odooai.api.routers.auth import router as auth_router
 from odooai.api.routers.chat import router as chat_router
 from odooai.api.routers.conversations import router as conversations_router
 from odooai.api.routers.health import router as health_router
@@ -122,7 +123,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    application.add_middleware(BaseHTTPMiddleware, dispatch=auth_middleware)
     application.add_middleware(BaseHTTPMiddleware, dispatch=request_id_middleware)
+    application.include_router(auth_router)
     application.include_router(health_router)
     application.include_router(chat_router)
     application.include_router(conversations_router)

@@ -86,7 +86,7 @@ export default function LandingPage() {
       {/* Pricing */}
       <div className="max-w-4xl mx-auto px-6 pb-16">
         <h2 className="text-2xl font-bold text-white text-center mb-8">Plans</h2>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             { name: "Starter", price: "49", features: ["100 requetes/mois", "1 connexion Odoo", "BA Profiles basiques"] },
             { name: "Professional", price: "149", features: ["500 requetes/mois", "1 connexion Odoo", "Tous les BA + Expert Profiles", "Lecture + ecriture"] },

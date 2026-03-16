@@ -3,7 +3,16 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "OdooAI — Votre Odoo peut faire plus",
-  description: "AI Business Analyst for Odoo",
+  description:
+    "Business Analyst IA qui a lu chaque ligne du code source Odoo. Decouvrez les fonctionnalites que vous n'utilisez pas.",
+  manifest: "/manifest.json",
+  themeColor: "#1B2A4A",
+  openGraph: {
+    title: "OdooAI — Votre Odoo peut faire plus",
+    description:
+      "1218 modules analyses. 5514 modeles. L'IA qui connait Odoo mieux que vous.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

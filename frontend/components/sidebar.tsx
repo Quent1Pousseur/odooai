@@ -26,12 +26,21 @@ export function Sidebar({
 }: SidebarProps) {
   return (
     <>
-      {/* Mobile toggle */}
+      {/* Mobile toggle — hamburger */}
       <button
         onClick={onToggle}
-        className="md:hidden fixed top-4 left-4 z-50 bg-primary text-white p-2 rounded-lg"
+        aria-label={isOpen ? "Fermer le menu" : "Ouvrir le menu"}
+        className="md:hidden fixed top-3 left-3 z-50 bg-primary text-white w-10 h-10 flex items-center justify-center rounded-xl shadow-lg hover:bg-primary/90 transition-all"
       >
-        {isOpen ? "✕" : "☰"}
+        {isOpen ? (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 12h18M3 6h18M3 18h18" />
+          </svg>
+        )}
       </button>
 
       {/* Sidebar */}

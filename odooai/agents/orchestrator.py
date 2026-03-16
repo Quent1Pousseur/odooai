@@ -231,17 +231,13 @@ async def handle_question(
             domain=domain_id,
         )
 
-    # Step 3: Optional live Odoo data
-    odoo_context = ""
-    if odoo_client is not None and odoo_api_key:
-        from odooai.agents._live_context import fetch_live_context
-
-        odoo_context = await fetch_live_context(
-            odoo_client,
-            odoo_uid,
-            odoo_api_key,
-            domain_id,
-        )
-
-    # Step 4: Call BA Agent
-    return await ask_ba_agent(question, profile, anthropic_api_key, model, odoo_context)
+    # Step 3: Call BA Agent (with optional live Odoo tools)
+    return await ask_ba_agent(
+        question,
+        profile,
+        anthropic_api_key,
+        model,
+        odoo_client=odoo_client,
+        odoo_uid=odoo_uid,
+        odoo_api_key=odoo_api_key,
+    )

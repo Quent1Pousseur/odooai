@@ -121,13 +121,42 @@ Question de l'utilisateur :
         else:
             break
 
-    # Extract text from final response
+    # Extract text from final response — also check all messages for text
     raw_text = ""
     for block in response.content:
         if hasattr(block, "text") and block.text:
             raw_text += block.text
 
-    logger.info("BA Agent responded", domain=profile.domain_id, tokens=total_tokens)
+    # Fallback: if no text in final response, check previous assistant messages
+    if not raw_text:
+        for msg in reversed(messages):
+            if isinstance(msg.get("content"), list):
+                for block in msg["content"]:
+                    if hasattr(block, "text") and block.text:
+                        raw_text += block.text
+                if raw_text:
+                    break
+
+    # Last resort: if still empty, ask LLM to summarize without tools
+    if not raw_text and tool_calls_made > 0:
+        logger.warning("No text after tool calls, requesting summary")
+        summary_resp = client.messages.create(
+            model=model,
+            max_tokens=2048,
+            system=SYSTEM_PROMPT,
+            messages=[*messages, {"role": "user", "content": "Resume ta reponse en texte."}],  # type: ignore[list-item]
+        )
+        total_tokens += summary_resp.usage.input_tokens + summary_resp.usage.output_tokens
+        for block in summary_resp.content:
+            if hasattr(block, "text") and block.text:
+                raw_text += block.text
+
+    logger.info(
+        "BA Agent responded",
+        domain=profile.domain_id,
+        tokens=total_tokens,
+        text_length=len(raw_text),
+    )
 
     return AgentResponse(
         answer=raw_text + DISCLAIMER,

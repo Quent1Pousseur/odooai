@@ -41,7 +41,23 @@ _LOGICAL_OPERATORS = frozenset({"&", "|", "!"})
 _FORBIDDEN_FIELD_PREFIXES = ("_", "sudo", "with_env", "with_context", "mapped")
 
 # Suspicious patterns in string values that may indicate SQL injection attempts.
-_SUSPICIOUS_PATTERNS = ("--", ";", "/*", "*/", "xp_", "exec(", "drop ", "union ")
+_SUSPICIOUS_PATTERNS = (
+    "--",
+    ";",
+    "/*",
+    "*/",
+    "xp_",
+    "exec(",
+    "drop ",
+    "union ",
+    "insert ",
+    "alter ",
+    "truncate ",
+    "update ",
+    "delete ",
+    "grant ",
+    "revoke ",
+)
 
 
 def validate_domain(domain: list[Any]) -> None:

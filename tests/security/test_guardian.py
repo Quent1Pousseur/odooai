@@ -115,7 +115,7 @@ class TestSanitizeResponse:
             records=records,
             requested_fields=["id", "email"],
         )
-        assert result.records[0]["email"] == "j***@example.com"
+        assert result.records[0]["email"] == "j***@e***.com"
 
     def test_sensitive_anonymizes_hr_names(self) -> None:
         records = [{"id": 1, "name": "John Doe"}]
@@ -201,3 +201,45 @@ class TestSanitizeResponse:
         assert isinstance(result.fields_returned, tuple)
         assert "id" in result.fields_returned
         assert "name" in result.fields_returned
+
+    def test_m2o_name_masked_on_sensitive(self) -> None:
+        """Many2one display names must be masked on SENSITIVE models."""
+        records = [{"id": 1, "partner_id": [42, "John Doe"]}]
+        result = sanitize_response(
+            model="account.move",
+            category=ModelCategory.SENSITIVE,
+            records=records,
+            requested_fields=["id", "partner_id"],
+        )
+        partner = result.records[0]["partner_id"]
+        assert partner["id"] == 42
+        assert partner["name"] == "J*** D***"
+
+    def test_m2o_name_not_masked_on_standard(self) -> None:
+        """Many2one display names should NOT be masked on STANDARD models."""
+        records = [{"id": 1, "partner_id": [42, "Acme Corp"]}]
+        result = sanitize_response(
+            model="sale.order",
+            category=ModelCategory.STANDARD,
+            records=records,
+            requested_fields=["id", "partner_id"],
+        )
+        assert result.records[0]["partner_id"]["name"] == "Acme Corp"
+
+    def test_hidden_field_pattern_match(self) -> None:
+        """Fields matching _key, _secret, _token patterns should be hidden."""
+        records = [{"id": 1, "name": "Test", "encryption_key": "abc", "oauth_token": "xyz"}]
+        result = sanitize_response(
+            model="sale.order",
+            category=ModelCategory.STANDARD,
+            records=records,
+            requested_fields=["id", "name", "encryption_key", "oauth_token"],
+        )
+        assert "encryption_key" not in result.records[0]
+        assert "oauth_token" not in result.records[0]
+        assert "name" in result.records[0]
+
+    def test_res_partner_is_sensitive(self) -> None:
+        """res.partner should be classified as SENSITIVE."""
+        category = guard_model_access("res.partner")
+        assert category == ModelCategory.SENSITIVE

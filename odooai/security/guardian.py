@@ -15,7 +15,7 @@ import structlog
 from odooai.domain.value_objects.model_category import ModelCategory
 from odooai.domain.value_objects.sanitized_response import SanitizedResponse
 from odooai.exceptions import BlockedMethodError
-from odooai.security.anonymizer import anonymize_record
+from odooai.security.anonymizer import anonymize_record, mask_name
 from odooai.security.audit import log_access
 from odooai.services.model_classifier import check_model_access
 
@@ -34,8 +34,19 @@ _ALWAYS_HIDDEN_FIELDS: frozenset[str] = frozenset(
         "secret",
         "credit_card",
         "session_token",
+        "access_token",
+        "refresh_token",
+        "oauth_token",
+        "oauth_access_token",
+        "totp_secret",
+        "private_key",
+        "activation_token",
+        "signup_token",
     }
 )
+
+# Substring patterns — any field name containing these is also hidden.
+_HIDDEN_FIELD_PATTERNS: tuple[str, ...] = ("_key", "_secret", "_token")
 
 
 def guard_model_access(model: str) -> ModelCategory:
@@ -105,6 +116,8 @@ def sanitize_response(
     was_anonymized = False
     if category == ModelCategory.SENSITIVE:
         filtered = [anonymize_record(record, model) for record in filtered]
+        # Also mask names inside normalized Many2one dicts
+        filtered = [_anonymize_m2o_names(record) for record in filtered]
         was_anonymized = True
 
     # Step 3: Determine fields actually returned
@@ -150,8 +163,8 @@ def _filter_fields(
     result: dict[str, Any] = {}
 
     for field, value in record.items():
-        # Always remove hidden fields
-        if field in _ALWAYS_HIDDEN_FIELDS:
+        # Always remove hidden fields (exact match + pattern match)
+        if _is_hidden_field(field):
             continue
 
         # If specific fields requested, only keep those + id
@@ -164,8 +177,31 @@ def _filter_fields(
     return result
 
 
+def _is_hidden_field(field: str) -> bool:
+    """Check if a field should be hidden (exact match or pattern match)."""
+    if field in _ALWAYS_HIDDEN_FIELDS:
+        return True
+    lower = field.lower()
+    return any(pattern in lower for pattern in _HIDDEN_FIELD_PATTERNS)
+
+
 def _normalize_value(value: Any) -> Any:
     """Normalize Odoo field values for clean LLM consumption."""
     if isinstance(value, (list, tuple)) and len(value) == 2 and isinstance(value[0], int):
         return {"id": value[0], "name": value[1]}
     return value
+
+
+def _anonymize_m2o_names(record: dict[str, Any]) -> dict[str, Any]:
+    """Mask person/company names inside normalized Many2one dict values."""
+    result: dict[str, Any] = {}
+    for field, value in record.items():
+        if isinstance(value, dict) and "id" in value and "name" in value:
+            name = value["name"]
+            if isinstance(name, str) and name:
+                result[field] = {"id": value["id"], "name": mask_name(name)}
+            else:
+                result[field] = value
+        else:
+            result[field] = value
+    return result

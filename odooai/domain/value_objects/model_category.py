@@ -57,6 +57,8 @@ class ModelClassifier:
             "hr.payslip",
             "hr.contract",
             "hr.employee",
+            "res.partner",
+            "mail.message",
             "base.automation",
             "ir.actions.server",
             "ir.module.module",

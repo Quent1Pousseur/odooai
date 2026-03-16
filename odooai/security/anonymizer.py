@@ -13,7 +13,9 @@ import re
 
 def mask_email(email: str) -> str:
     """
-    Mask an email address: j***@domain.com.
+    Mask an email address: j***@c***.com.
+
+    Both local part and domain name are masked to prevent company identification.
 
     Args:
         email: Raw email string.
@@ -24,9 +26,15 @@ def mask_email(email: str) -> str:
     if "@" not in email:
         return email
     local, domain = email.rsplit("@", 1)
-    if len(local) <= 1:
-        return f"*@{domain}"
-    return f"{local[0]}***@{domain}"
+    masked_local = f"{local[0]}***" if len(local) > 1 else "*"
+    # Mask domain name but keep TLD (.com, .fr, etc.)
+    domain_parts = domain.rsplit(".", 1)
+    if len(domain_parts) == 2:
+        domain_name, tld = domain_parts
+        masked_domain = f"{domain_name[0]}***.{tld}" if domain_name else f"***.{tld}"
+    else:
+        masked_domain = f"{domain[0]}***" if domain else "***"
+    return f"{masked_local}@{masked_domain}"
 
 
 def mask_name(name: str) -> str:

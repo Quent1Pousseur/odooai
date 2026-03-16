@@ -13,13 +13,16 @@ from odooai.security.anonymizer import (
 
 class TestMaskEmail:
     def test_normal_email(self) -> None:
-        assert mask_email("john@example.com") == "j***@example.com"
+        assert mask_email("john@example.com") == "j***@e***.com"
 
     def test_single_char_local(self) -> None:
-        assert mask_email("j@example.com") == "*@example.com"
+        assert mask_email("j@example.com") == "*@e***.com"
 
     def test_not_email(self) -> None:
         assert mask_email("not-an-email") == "not-an-email"
+
+    def test_domain_masked(self) -> None:
+        assert mask_email("user@company.fr") == "u***@c***.fr"
 
 
 class TestMaskName:
@@ -77,7 +80,7 @@ class TestAnonymizeFieldValue:
         assert anonymize_field_value("salary", 3500.0) == 3500.0  # ceil(3500/100)*100
 
     def test_email_field(self) -> None:
-        assert anonymize_field_value("email", "john@co.com") == "j***@co.com"
+        assert anonymize_field_value("email", "john@co.com") == "j***@c***.com"
 
     def test_phone_field(self) -> None:
         assert anonymize_field_value("phone", "+33612345678") == "***78"
@@ -113,7 +116,7 @@ class TestAnonymizeRecord:
         }
         result = anonymize_record(record, "hr.employee")
         assert result["name"] == "J*** S***"
-        assert result["email"] == "j***@company.com"
+        assert result["email"] == "j***@c***.com"
         assert result["salary"] == 4200.0  # ceil(4200/100)*100
         assert result["phone"] == "***78"
         assert result["id"] == 1  # ID unchanged

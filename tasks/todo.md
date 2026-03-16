@@ -1,58 +1,47 @@
 # OdooAI — Todo
 
-## Phase 1 — Foundation (Mois 1-3)
+## Sprint 1 (termine — 34 commits, 9 specs, 159 tests, MVP CLI)
+- [x] 7 specs techniques + 2 specs retroactives
+- [x] 1218 KG modules + 9 BA Profiles
+- [x] MVP CLI : `odooai chat` teste par fondateur
+- [x] 8 livrables business
+- [x] Design brief UI/UX + DA
 
-### Sprint 1 Semaine 1 (termine — 7/7 pistes)
-- [x] ODAI-CORE-001 : Architecture hexagonale
-- [x] ODAI-CORE-002 : OdooClient dual-protocole + read_group + name_search
-- [x] ODAI-INFRA-001 : CI/CD GitHub Actions
-- [x] ODAI-CORE-003 : Config fail-fast + structlog
-- [x] ODAI-SEC-001 : Security Guardian + hardening (22 issues, 11 corrigees)
-- [x] ODAI-DATA-001 : Knowledge Graphs + Code Analyst (1218 modules, 0 echecs)
-- [x] ODAI-API-001 : CLI (odooai analyze, check-kg, serve)
-- [x] ODAI-BIZ-001 : Pitch, personas, cost model, LGPL, matrice concurrentielle
-- [x] Repo GitHub private + CI/CD operationnel
+## Sprint 2 (31 mars - 13 avril 2026)
 
-### Sprint 1 Semaine 2 (24-28 mars 2026)
+> CHECKLIST.md obligatoire. Spec avant code. Review dans reviews/.
 
-#### PISTE A — KG Quality + BA Profiles (chemin critique)
-- [ ] KG quality check : sale.order vs realite — Odoo Expert (10) — Lun
-- [ ] Schema BA Profile (Pydantic) — AI Eng (09) + Prompt Eng (25) — Lun
-- [ ] Prompt BA Factory + tests — AI Eng (09) + Prompt Eng (25) — Mar
-- [ ] Criteres d'eval BA Profiles — Prompt Eng (25) + Odoo Expert (10) — Mar
-- [ ] BA Profile Generator — AI Eng (09) + Backend Arch (08) — Mer
-- [ ] Generer BA Profile `sale` — AI Eng (09) — Mer
-- [ ] Validation BA Profile par Odoo Expert — Odoo Expert (10) — Jeu
-- [ ] Review interne — Security Arch (07) — Ven
+### PISTE A — Guardian wire + Connexion live
+- [ ] Spec ODAI-AGENT-002 (Guardian wire) — Backend Arch (08)
+- [ ] Implementation + review dans reviews/
+- [ ] Spec ODAI-CORE-004 (Connexion live Odoo) — Backend Arch (08)
+- [ ] Implementation + tests d'integration
+- [ ] Docker Odoo pour tests — QA Lead (13)
 
-#### PISTE B — Orchestrator + Chat CLI
-- [ ] Spec ODAI-AGENT-001 Orchestrator — Backend Arch (08) + CTO (02) — Mer
-- [ ] Orchestrator implementation — Backend Arch (08) — Jeu
-- [ ] Wire Guardian dans pipeline — Backend Arch (08) — Jeu
-- [ ] Chat CLI (`odooai chat`) — Senior Dev (19) — Ven
-- [ ] **Fondateur teste** — Ven
+### PISTE B — Frontend Next.js + Chat
+- [ ] Spec ODAI-UI-001 (Frontend scaffold + chat) — Frontend Eng (21)
+- [ ] Scaffold Next.js + Tailwind + Shadcn
+- [ ] Chat page avec streaming
+- [ ] Integration backend API → frontend
 
-#### PISTE C — Business (action fondateur)
-- [ ] Envoyer 5+ messages LinkedIn PME — Fondateur — Lun-Ven
-- [ ] RDV avocat LGPL — Fondateur — Lun
-- [ ] README Getting Started — Technical Writer (29) — Mer
+### PISTE C — BA Profile validation
+- [ ] Relire sales_crm BA Profile — Odoo Expert (10)
+- [ ] Relire accounting BA Profile — Odoo Expert (10)
+- [ ] Rapport + corrections — Odoo Expert (10) + AI Eng (09)
 
-#### PISTE D — Qualite
-- [ ] Sanitizer strings KG avant prompt — Security Arch (07) — Lun
-- [ ] Plan red teaming Sprint 2 — Security Auditor (14) — Ven
-- [ ] Instrumenter tokens LLM — AI Eng (09) — Ven
+### PISTE D — Business (fondateur)
+- [ ] 5 messages LinkedIn PME — Fondateur
+- [ ] RDV avocat LGPL — Fondateur
+- [ ] README Getting Started — Technical Writer (29)
 
-### Stubs actifs (dette technique)
+### PISTE E — Qualite + Legal
+- [ ] Politique de confidentialite draft — Legal (16)
+- [ ] Plan red teaming — Security Auditor (14)
 
-| Stub | Localisation | Remplit par | Deadline |
-|------|-------------|------------|----------|
-| AnthropicProvider | infrastructure/llm/ | PISTE A (BA Factory) | Semaine 2 |
-| Database engine | infrastructure/db/ | Quand necessaire | Sprint 2 |
-| RedisClient (vrai Redis) | infrastructure/cache/ | Quand necessaire | Sprint 2 |
-| Guardian pas wire | security/guardian.py | PISTE B (Orchestrator) | Semaine 2 |
+### Stubs a combler Sprint 2
 
-### VETOs en attente
-
-| Agent | Sujet | Impact | Status |
-|-------|-------|--------|--------|
-| Legal (16) | LGPL extraction code Odoo | Peut impacter distribution | Fondateur doit consulter avocat |
+| Stub | Remplit par |
+|------|-----------|
+| Guardian pas wire | AGENT-002 |
+| Database engine | CORE-004 (credentials) |
+| AnthropicProvider (stub) | Refactorer via ILLMProvider |

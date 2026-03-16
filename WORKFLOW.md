@@ -4,12 +4,28 @@
 
 | Rituel | Frequence | Duree | Animateur | Sauvegarde |
 |--------|-----------|-------|-----------|------------|
-| **Daily Standup** | Chaque jour | 30 min | PM | `meetings/daily/YYYY-MM-DD.md` |
+| **Kick-Off Phase/Sprint** | Debut de chaque phase/sprint | 2-3h | PM + CTO | `meetings/kickoff/YYYY-MM-DD-sprintX.md` |
+| **Daily Standup** | Chaque jour | 45 min | PM | `meetings/daily/YYYY-MM-DD.md` |
 | **Weekly Recap** | Vendredi | PM redige | PM | `meetings/weekly/YYYY-WXX.md` |
-| **Sprint Planning** | Toutes les 2 semaines | 1h | PM + CTO | Dans le milestone GitHub |
-| **Sprint Retro** | Fin de sprint | 30 min | PM | `meetings/retro/YYYY-WXX.md` |
+| **Sprint Retro** | Fin de sprint | 1h | PM | `meetings/retro/YYYY-MM-DD-sprintX.md` |
 
-Details du Daily Standup : voir [meetings/DAILY_STANDUP.md](meetings/DAILY_STANDUP.md)
+### Kick-Off (obligatoire a chaque debut de phase/sprint)
+Le kick-off lance officiellement une phase ou un sprint. **TOUS les 42 agents participent.**
+- Direction presente les objectifs et contraintes
+- Chaque agent annonce ses engagements et ses questions
+- Les VETOs potentiels sont identifies AVANT de coder
+- Les risques sont documentes avec mitigations
+- Les actions business sont planifiees en parallele du dev
+- Sauvegarde : `meetings/kickoff/`
+
+### Daily Standup (avec challenges obligatoires)
+Pas un rapport de status — un **debat**. Chaque agent avec un VETO doit poser au moins 1 question critique.
+Les agents "en veille" participent aussi — leur expertise anticipe les problemes.
+Details : voir [meetings/DAILY_STANDUP.md](meetings/DAILY_STANDUP.md)
+
+### Sprint Retro (avec challenges obligatoires)
+TOUS les 42 agents challengent le travail du sprint. Pas de consensus mou.
+Le score de satisfaction doit refleter la realite, pas l'optimisme.
 
 ---
 

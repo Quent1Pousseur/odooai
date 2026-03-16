@@ -45,14 +45,19 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         api_type=OdooApiType.JSON2,
     )
 
+    # Crypto: skip in dev if key not configured
+    crypto: AESCrypto | None = None
+    if settings.odoo_crypto_key:
+        crypto = AESCrypto(
+            key_b64=settings.odoo_crypto_key,
+            previous_key_b64=settings.odoo_crypto_key_previous,
+        )
+
     wire(
         odoo_client=odoo_client,
         cache=RedisClient(),
         llm_provider=AnthropicProvider(),
-        crypto=AESCrypto(
-            key_b64=settings.odoo_crypto_key,
-            previous_key_b64=settings.odoo_crypto_key_previous,
-        ),
+        crypto=crypto,
     )
 
     logger.info(

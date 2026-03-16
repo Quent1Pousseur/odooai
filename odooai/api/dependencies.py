@@ -20,7 +20,7 @@ def wire(
     odoo_client: IOdooClient,
     cache: ICache,
     llm_provider: ILLMProvider,
-    crypto: ICrypto,
+    crypto: ICrypto | None,
 ) -> None:
     """
     Wire concrete implementations to module-level singletons.

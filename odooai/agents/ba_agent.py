@@ -84,12 +84,14 @@ Question de l'utilisateur :
     tool_calls_made = 0
     for _i in range(MAX_TOOL_CALLS + 1):
         use_tools = tools if tools and tool_calls_made < MAX_TOOL_CALLS else []
-        response = client.messages.create(
-            model=model,
-            max_tokens=2048,
-            system=SYSTEM_PROMPT,
-            messages=messages,  # type: ignore[arg-type]
-            tools=use_tools if use_tools else anthropic.NOT_GIVEN,  # type: ignore[arg-type]
+
+        # Retry on overloaded errors
+        response = _call_with_retry(
+            client,
+            model,
+            SYSTEM_PROMPT,
+            messages,
+            use_tools,
         )
 
         total_tokens += response.usage.input_tokens + response.usage.output_tokens
@@ -166,6 +168,39 @@ Question de l'utilisateur :
         sources=profile.modules_covered,
         tokens_used=total_tokens,
     )
+
+
+def _call_with_retry(
+    client: Any,
+    model: str,
+    system: str,
+    messages: list[dict[str, Any]],
+    tools: list[dict[str, Any]],
+    max_retries: int = 2,
+) -> Any:
+    """Call Anthropic API with retry on overloaded errors."""
+    import time
+
+    import anthropic
+
+    for attempt in range(max_retries + 1):
+        try:
+            return client.messages.create(
+                model=model,
+                max_tokens=2048,
+                system=system,
+                messages=messages,
+                tools=tools if tools else anthropic.NOT_GIVEN,
+            )
+        except anthropic.APIStatusError as exc:
+            if exc.status_code != 529:  # 529 = Overloaded
+                raise
+            if attempt < max_retries:
+                wait = 2 * (attempt + 1)
+                logger.warning("Anthropic overloaded, retrying", attempt=attempt + 1, wait=wait)
+                time.sleep(wait)
+            else:
+                raise
 
 
 def _build_profile_context(profile: BAProfile) -> str:

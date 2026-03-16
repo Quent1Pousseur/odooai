@@ -28,3 +28,9 @@
 **Erreur** : Ajouter mypy apres coup est douloureux et cree du bruit.
 **Fix** : L'avoir des le depart force des decisions de typage propres.
 **Regle** : Jamais de regression mypy — c'est un cliquet, on ne revient pas en arriere.
+
+### [2026-03-16] Review interne AVANT le commit, pas apres
+**Contexte** : SEC-001 livree sans review. Le fondateur a demande une review manuelle.
+**Erreur** : 5 failles critiques/high decouvertes apres commit (email domain expose, hidden fields incomplets, M2O name leak, SQL patterns manquants, res.partner pas SENSITIVE).
+**Fix** : Corrige dans un commit de hardening separe.
+**Regle** : Apres chaque spec implementee, TOUJOURS lancer une review interne (subagent Explore) AVANT le commit final. Ne jamais livrer sans review.

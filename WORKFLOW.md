@@ -11,12 +11,21 @@
 
 ### Kick-Off (obligatoire a chaque debut de phase/sprint)
 Le kick-off lance officiellement une phase ou un sprint. **TOUS les 42 agents participent.**
-- Direction presente les objectifs et contraintes
-- Chaque agent annonce ses engagements et ses questions
-- Les VETOs potentiels sont identifies AVANT de coder
-- Les risques sont documentes avec mitigations
-- Les actions business sont planifiees en parallele du dev
-- Sauvegarde : `meetings/kickoff/`
+Le kick-off produit un **plan d'action concret** — pas juste une presentation.
+
+**Contenu obligatoire :**
+1. Direction cadre les objectifs et contraintes du sprint
+2. Chaque agent recoit son assignment avec deadline et dependances
+3. Les pistes de travail paralleles sont explicites (technique, business, legal, etc.)
+4. Les dependances inter-agents sont identifiees (si X bloque, Y ne peut pas avancer)
+5. Les VETOs potentiels sont identifies AVANT de coder
+6. Les risques sont documentes avec mitigations et owners
+7. Les metriques de succes du sprint sont definies
+8. Le plan d'action est reporte dans `tasks/todo.md`
+
+**Objectif** : apres le kick-off, chaque agent sait exactement quoi faire, quand, pourquoi, et qui depend de lui. Personne n'avance a l'aveugle.
+
+Sauvegarde : `meetings/kickoff/`
 
 ### Daily Standup (avec challenges obligatoires)
 Pas un rapport de status — un **debat**. Chaque agent avec un VETO doit poser au moins 1 question critique.

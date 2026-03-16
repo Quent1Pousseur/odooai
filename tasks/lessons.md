@@ -58,3 +58,9 @@
 **Erreur** : L'empressement de coder fait sauter les meetings. On perd le cadrage, les challenges, et les decisions collectives.
 **Fix** : Regle absolue ajoutee au workflow.
 **Regle** : Jamais de code sans daily avant. Jamais de fin de session sans daily apres. Non-negociable.
+
+### [2026-03-17] RIEN ne se code sans spec — ZERO exception
+**Contexte** : ODAI-DATA-002 et ODAI-AGENT-001 ont ete codes sans spec. Les reviews ont ete faites par subagent et sont invisibles au fondateur.
+**Erreur** : La regle d'or du WORKFLOW ("RIEN ne se code sans spec") a ete violee 2 fois. Les reviews etaient cachees dans les subagents, le fondateur ne pouvait pas les voir ni remonter une mauvaise decision.
+**Fix** : Specs retroactives ecrites pour DATA-002 et AGENT-001 (avec mention de l'erreur). Reviews documentees dans `reviews/`. Memoire permanente ajoutee.
+**Regle** : 1) Spec dans `specs/` AVANT de coder. 2) Review dans `reviews/` (fichier, pas subagent invisible). 3) Le fondateur peut tout tracer. ZERO exception, ZERO raccourci.

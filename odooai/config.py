@@ -69,6 +69,8 @@ class Settings(BaseSettings):
             errors.append("ANTHROPIC_API_KEY is required")
         if "sqlite" in self.database_url:
             errors.append("DATABASE_URL must use PostgreSQL in production")
+        if self.odoo_url and not self.odoo_url.startswith("https://"):
+            errors.append("ODOO_URL must use HTTPS in production")
 
         if errors:
             detail = "; ".join(errors)

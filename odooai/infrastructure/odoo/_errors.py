@@ -1,6 +1,7 @@
 """
 Module: infrastructure/odoo/_errors.py
 Role: Map Odoo API errors to domain exceptions.
+      user_message NEVER contains technical details (model names, fault strings).
 Dependencies: odooai.exceptions
 """
 
@@ -32,7 +33,7 @@ def raise_from_json2_error(status_code: int, error: dict[str, Any]) -> None:
     if "ValidationError" in name or "UserError" in name:
         raise OdooValidationError(
             f"Odoo validation error: {message}",
-            user_message=f"Odoo rejected the operation: {message}",
+            user_message="Odoo rejected the operation. Check your input and try again.",
         )
     raise OdooConnectionError(
         f"Odoo JSON-2 error {status_code}: {message}",
@@ -42,9 +43,8 @@ def raise_from_json2_error(status_code: int, error: dict[str, Any]) -> None:
 
 def raise_from_xmlrpc_fault(fault_string: str, model: str, method: str) -> None:
     """Map an XML-RPC fault string to a domain exception."""
-    # Action succeeded but return value not serializable (e.g. recordset)
     if "cannot marshal" in fault_string:
-        return  # Caller should return True
+        return  # Action succeeded, return value not serializable
 
     if "AccessError" in fault_string or "Access Denied" in fault_string:
         raise OdooAuthError(
@@ -59,11 +59,11 @@ def raise_from_xmlrpc_fault(fault_string: str, model: str, method: str) -> None:
     if "ValidationError" in fault_string or "UserError" in fault_string:
         raise OdooValidationError(
             f"XML-RPC validation error: {fault_string}",
-            user_message=f"Odoo rejected the operation: {fault_string}",
+            user_message="Odoo rejected the operation. Check your input and try again.",
         )
     raise OdooValidationError(
         f"XML-RPC fault on {model}.{method}: {fault_string}",
-        user_message=f"Odoo error on {model}.{method}: {fault_string}",
+        user_message="An error occurred while communicating with Odoo.",
     )
 
 
@@ -83,10 +83,9 @@ def raise_from_rpc_error(error: dict[str, Any]) -> None:
     if exc_type in ("validation_error", "user_error"):
         raise OdooValidationError(
             f"Odoo validation error: {message}",
-            user_message=f"Odoo rejected the operation: {data_message or message}",
+            user_message="Odoo rejected the operation. Check your input and try again.",
         )
-    detail = data_message or message
     raise OdooConnectionError(
         f"Odoo RPC error: {message} (type={exc_type})",
-        user_message=f"Odoo returned an error: {detail}",
+        user_message="An error occurred while communicating with Odoo.",
     )

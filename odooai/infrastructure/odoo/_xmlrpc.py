@@ -214,6 +214,10 @@ async def _check_has_group(
             {},
         )
         return bool(result)
+    except (OdooAuthError, OdooConnectionError):
+        raise
     except Exception as exc:
-        logger.warning("has_group check failed", group=group_ext_id, error=str(exc))
+        logger.warning(
+            "has_group check failed — denying access", group=group_ext_id, error=str(exc)
+        )
         return False

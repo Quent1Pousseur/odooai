@@ -212,6 +212,12 @@ async def _check_has_group(
             {"ids": [uid], "group_ext_id": group_ext_id},
         )
         return bool(result)
+    except OdooAuthError:
+        # Auth error = key invalid, propagate
+        raise
     except Exception as exc:
-        logger.warning("has_group check failed", group=group_ext_id, error=str(exc))
+        # Fail-secure: if group check fails, deny access
+        logger.warning(
+            "has_group check failed — denying access", group=group_ext_id, error=str(exc)
+        )
         return False

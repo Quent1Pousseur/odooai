@@ -71,3 +71,11 @@ make run             # uvicorn dev server :8000
 - Double validation avant toute ecriture dans Odoo client
 - Knowledge Graphs sont le moat : extraits du code source, pas de la doc
 - LLM-agnostic : architecture permettant de switcher de provider
+
+## Regles INTRANSIGEANTES (jamais derogeable)
+- **MEETINGS OBLIGATOIRES** : daily matin + daily fin a CHAQUE session. Kick-off a chaque phase. Retro a chaque fin de sprint. JAMAIS oublier.
+- **ZERO INACTIVITE** : a chaque daily matin, verifier que les 48 agents ont une tache, aident un collegue, ou se forment (CR dans learning/). Template : hr/daily-checklist-template.md. PERSONNE ne reste inactif.
+- **SPECS AVANT CODE** : RIEN ne se code sans spec ODAI-XXX ecrite et committee.
+- **REVIEWS DOCUMENTEES** : chaque review interne est sauvegardee dans reviews/. Le fondateur doit pouvoir les lire.
+- **CHALLENGES ACTIFS** : les agents DOIVENT se challenger dans les meetings. Pas de consensus mou.
+- **LEARNING SI PAS DE TACHE** : tout agent sans tache produit un CR de formation dans learning/ le jour meme.

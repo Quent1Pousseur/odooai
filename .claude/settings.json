@@ -1,17 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Read(//Users/quentinpousseur/prodooctivity/backend/app/**)",
-      "Read(//Users/quentinpousseur/prodooctivity/backend/app/application/services/**)",
-      "Read(//Users/quentinpousseur/prodooctivity/backend/app/interfaces/mcp/**)",
-      "Read(//Users/quentinpousseur/prodooctivity/backend/brain/**)",
-      "Read(//Users/quentinpousseur/immo/backend/**)",
-      "Read(//Users/quentinpousseur/.claude/**)",
-      "Bash(git -C /Users/quentinpousseur/mcp init --dry-run)",
-      "Bash(git -C /Users/quentinpousseur/mcp status)",
-      "Bash(wc -l /Users/quentinpousseur/mcp/agents/prompts/*.md)",
-      "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Read(//Users/quentinpousseur/prodooctivity/**)",
+      "Read(//Users/quentinpousseur/.claude/**)"
     ]
   }
 }

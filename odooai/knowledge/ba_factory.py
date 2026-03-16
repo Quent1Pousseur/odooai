@@ -64,12 +64,17 @@ async def generate_ba_profile(
 
     logger.info("Generating BA Profile", domain=domain_id, modules=modules_covered)
 
-    messages = build_ba_messages(domain_name, domain_id, kg_summary, language)
+    all_messages = build_ba_messages(domain_name, domain_id, kg_summary, language)
+    # Anthropic API: system is a top-level param, not a message role
+    system_msg = next((m["content"] for m in all_messages if m["role"] == "system"), "")
+    user_messages = [m for m in all_messages if m["role"] != "system"]
+
     client = anthropic.Anthropic(api_key=anthropic_api_key)
     response = client.messages.create(
         model=model,
         max_tokens=4096,
-        messages=messages,  # type: ignore[arg-type]
+        system=system_msg,
+        messages=user_messages,  # type: ignore[arg-type]
     )
 
     # Extract text from response (first TextBlock)

@@ -130,6 +130,6 @@ Genere au moins 3 gotchas (les pieges les plus frequents).
 Sois concret et actionnable. Pas de generalites."""
 
     return [
-        {"role": "system", "content": system},
+        {"role": "system", "content": system},  # Extracted separately by caller
         {"role": "user", "content": user},
     ]

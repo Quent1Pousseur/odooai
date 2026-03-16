@@ -13,19 +13,30 @@ SaaS-first, closed source, concurrent de prodooctivity (pas un fork).
 - **Testing**: pytest, Vitest + Testing Library
 - **Quality**: ruff (lint+format), mypy --strict, bandit
 
-## Structure du code
+## Structure du code (hexagonal — ODAI-CORE-001)
 ```
-odooai/                  # Package Python principal
-  main.py               # FastAPI app entrypoint
-  config.py             # Settings (pydantic-settings)
-  domain/               # Value objects, entities, enums
-  services/             # Business logic
-  agents/               # LLM agent implementations
-  connectors/           # Odoo XML-RPC/JSON-RPC clients
-  security/             # Guardian, anonymization, encryption
-  api/                  # FastAPI routers
-tests/                  # Mirrors odooai/ structure
-knowledge_store/        # Knowledge Graphs JSON (generated, gitignored)
+odooai/
+  main.py                        # create_app() factory + lifespan wiring
+  config.py                      # pydantic-settings
+  exceptions.py                  # OdooAIError hierarchy (message + user_message)
+  domain/
+    entities/connection.py       # OdooConnection
+    value_objects/               # ModelCategory, OdooUserInfo, SanitizedResponse
+    ports/                       # IOdooClient, ICache, ILLMProvider, ICrypto
+  services/                      # field_scorer, model_classifier
+  security/                      # guardian, anonymizer, audit (ZERO LLM)
+  infrastructure/                # Concrete port implementations
+    odoo/client.py               # XML-RPC + JSON-RPC
+    cache/redis_client.py        # Redis / in-memory
+    db/database.py               # SQLAlchemy async
+    llm/anthropic_provider.py    # Claude SDK
+    crypto.py                    # AES-256-GCM
+  api/
+    dependencies.py              # wire() + Depends() factories
+    middleware.py                 # RequestID
+    routers/health.py            # /health
+tests/                           # Mirrors odooai/ structure
+knowledge_store/                 # Knowledge Graphs JSON (gitignored)
 ```
 
 ## Conventions code

@@ -10,15 +10,18 @@ import json
 from typing import Any
 
 import structlog
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from odooai.config import get_settings
 
 logger = structlog.get_logger(__name__)
 
 router = APIRouter(tags=["chat"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 class ChatRequest(BaseModel):
@@ -36,37 +39,16 @@ class ChatRequest(BaseModel):
     odoo_api_key: str = ""
 
 
-# Simple in-memory rate limiter (per-IP, 10 requests/minute)
-_rate_limit: dict[str, list[float]] = {}
-_RATE_LIMIT_MAX = 10
-_RATE_LIMIT_WINDOW = 60.0  # seconds
-
-
-def _check_rate_limit(client_ip: str) -> bool:
-    """Return True if request is allowed, False if rate limited."""
-    import time
-
-    now = time.time()
-    if client_ip not in _rate_limit:
-        _rate_limit[client_ip] = []
-    # Clean old entries
-    _rate_limit[client_ip] = [t for t in _rate_limit[client_ip] if now - t < _RATE_LIMIT_WINDOW]
-    if len(_rate_limit[client_ip]) >= _RATE_LIMIT_MAX:
-        return False
-    _rate_limit[client_ip].append(now)
-    return True
-
-
 @router.post("/api/chat")
-async def chat(request: ChatRequest) -> StreamingResponse:
+@limiter.limit("10/minute")
+async def chat(request: Request, body: ChatRequest) -> StreamingResponse:
     """
     Chat endpoint with Server-Sent Events streaming.
 
-    Rate limited to 10 requests per minute per IP.
+    Rate limited to 10 requests per minute per IP (slowapi).
     """
-    # Note: in production, use a proper middleware (slowapi, Redis-based)
     return StreamingResponse(
-        _stream_response(request),
+        _stream_response(body),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

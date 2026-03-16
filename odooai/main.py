@@ -7,8 +7,12 @@ Dependencies: fastapi, infrastructure, api
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+import sentry_sdk
 import structlog
 from fastapi import FastAPI
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from odooai.api.dependencies import wire
@@ -33,6 +37,10 @@ logger = structlog.get_logger(__name__)
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: wire dependencies on startup, cleanup on shutdown."""
     settings = get_settings()
+
+    # Sentry error tracking (learning SOC #26 — 3 lines)
+    if settings.sentry_dsn:
+        sentry_sdk.init(dsn=settings.sentry_dsn, traces_sample_rate=0.1)
 
     # Configure structured logging
     setup_logging(log_level=settings.log_level, is_production=settings.is_production)
@@ -90,12 +98,26 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # CORS for frontend
+    # Rate limiting (learning DevSecOps #24)
+    limiter = Limiter(key_func=get_remote_address)
+    application.state.limiter = limiter
+    application.add_exception_handler(
+        RateLimitExceeded,
+        _rate_limit_exceeded_handler,  # type: ignore[arg-type]
+    )
+
+    # CORS — restrictif en prod, permissif en dev
     from starlette.middleware.cors import CORSMiddleware
 
+    settings = get_settings()
+    origins = (
+        ["https://odooai.com", "https://www.odooai.com"]
+        if settings.is_production
+        else ["http://localhost:3000"]
+    )
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"],  # Next.js dev
+        allow_origins=origins,
         allow_methods=["*"],
         allow_headers=["*"],
     )

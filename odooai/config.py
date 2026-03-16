@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     # LLM
     anthropic_api_key: str = ""
 
+    # Monitoring
+    sentry_dsn: str = ""
+
     @property
     def is_production(self) -> bool:
         """Check if running in production."""

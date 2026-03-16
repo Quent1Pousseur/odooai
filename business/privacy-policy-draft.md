@@ -2,7 +2,7 @@
 
 ## Auteur : Legal & Compliance (16)
 ## Date : 2026-03-18
-## Status : DRAFT — a valider par un avocat avant publication
+## Status : DRAFT v2 — reviewed 2026-03-21 — a valider par un avocat
 
 ---
 
@@ -85,7 +85,15 @@ OdooAI est un outil d'assistance. Il ne se substitue pas a un consultant profess
 ## 9. Modifications
 
 Cette politique peut etre mise a jour. Les utilisateurs seront informes par email.
-Derniere mise a jour : 2026-03-18 (DRAFT).
+Derniere mise a jour : 2026-03-21 (DRAFT v2 — reviewed by Security Arch + Legal).
+
+## 10. Conversations
+
+Les conversations (questions et reponses) sont stockees dans une base de donnees locale.
+- Les conversations ne sont PAS partagees entre utilisateurs
+- Les conversations ne sont PAS utilisees pour entrainer des modeles IA
+- La suppression des conversations sera disponible dans une prochaine version
+- En attendant, les conversations peuvent etre supprimees sur demande a privacy@odooai.com
 
 ---
 

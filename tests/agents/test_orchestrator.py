@@ -6,6 +6,7 @@ from odooai.agents.orchestrator import (
     detect_domain,
     guarded_odoo_read,
     guarded_odoo_write_check,
+    select_model,
 )
 from odooai.domain.value_objects.model_category import ModelCategory, ModelClassifier
 from odooai.exceptions import BlockedMethodError, BlockedModelError, DomainInjectionError
@@ -36,6 +37,34 @@ class TestDetectDomain:
         # "commande client stock" → sales (commande, client) > supply_chain (stock)
         result = detect_domain("commande client")
         assert result == "sales_crm"
+
+
+class TestSelectModel:
+    """Test intelligent Haiku/Sonnet routing."""
+
+    def test_simple_question_no_tools_uses_haiku(self) -> None:
+        result = select_model("Combien de commandes ?", has_tools=False)
+        assert "haiku" in result
+
+    def test_complex_question_uses_sonnet(self) -> None:
+        result = select_model(
+            "Comment optimiser ma chaine logistique pour reduire les couts ?",
+            has_tools=False,
+        )
+        assert "sonnet" in result
+
+    def test_with_tools_always_sonnet(self) -> None:
+        result = select_model("Combien de commandes ?", has_tools=True)
+        assert "sonnet" in result
+
+    def test_long_simple_question_uses_sonnet(self) -> None:
+        """Even with simple keywords, long questions need Sonnet."""
+        result = select_model("Combien de " + "x " * 100, has_tools=False)
+        assert "sonnet" in result
+
+    def test_short_list_uses_haiku(self) -> None:
+        result = select_model("Liste des clients", has_tools=False)
+        assert "haiku" in result
 
 
 class TestGuardedOdooRead:

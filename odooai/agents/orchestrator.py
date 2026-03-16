@@ -60,6 +60,38 @@ _DOMAIN_KEYWORDS: dict[str, list[str]] = {
 }
 
 
+_SIMPLE_PATTERNS = frozenset(
+    {
+        "combien",
+        "liste",
+        "quel est",
+        "quels sont",
+        "nombre de",
+        "total de",
+        "derniers",
+        "dernieres",
+    }
+)
+
+
+def select_model(question: str, has_tools: bool) -> str:
+    """
+    Route to Haiku or Sonnet based on question complexity.
+
+    Haiku: short factual questions without tools (6x cheaper).
+    Sonnet: complex analysis, tool calls, recommendations.
+    """
+    if has_tools:
+        return "claude-sonnet-4-20250514"
+
+    lower = question.lower()
+    is_simple = any(p in lower for p in _SIMPLE_PATTERNS) and len(question) < 100
+    if is_simple:
+        return "claude-haiku-4-5-20251001"
+
+    return "claude-sonnet-4-20250514"
+
+
 def detect_domain(question: str) -> str | None:
     """
     Detect the most likely domain for a question using keyword matching.

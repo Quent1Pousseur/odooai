@@ -1,11 +1,13 @@
 """
 Module: agents/_live_context.py
 Role: Fetch live data from an Odoo instance for domain-specific context.
+      Uses asyncio.gather for parallel queries (learning CTO #02).
 Dependencies: domain ports, security guardian
 """
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import structlog
@@ -29,62 +31,9 @@ async def fetch_live_context(
     parts: list[str] = []
 
     try:
-        if domain_id == "sales_crm":
-            data = guarded_odoo_read(
-                "sale.order",
-                await odoo_client.search_read(
-                    api_key,
-                    "sale.order",
-                    [("state", "in", ["draft", "sent", "sale"])],
-                    ["name", "state", "partner_id", "amount_total", "date_order"],
-                    limit=10,
-                    uid=uid,
-                ),
-                ["name", "state", "partner_id", "amount_total", "date_order"],
-                uid=uid,
-            )
-            parts.append(f"Dernieres commandes ({data.record_count}) :")
-            for r in data.records:
-                parts.append(f"  - {r.get('name')} | {r.get('state')} | {r.get('amount_total')}")
-
-        elif domain_id == "supply_chain":
-            data = guarded_odoo_read(
-                "stock.picking",
-                await odoo_client.search_read(
-                    api_key,
-                    "stock.picking",
-                    [("state", "not in", ["done", "cancel"])],
-                    ["name", "state", "partner_id", "scheduled_date"],
-                    limit=10,
-                    uid=uid,
-                ),
-                ["name", "state", "partner_id", "scheduled_date"],
-                uid=uid,
-            )
-            parts.append(f"Transferts en cours ({data.record_count}) :")
-            for r in data.records:
-                parts.append(f"  - {r.get('name')} | {r.get('state')}")
-
-        elif domain_id == "accounting":
-            data = guarded_odoo_read(
-                "account.move",
-                await odoo_client.search_read(
-                    api_key,
-                    "account.move",
-                    [("state", "=", "draft"), ("move_type", "=", "out_invoice")],
-                    ["name", "partner_id", "amount_total", "invoice_date_due"],
-                    limit=10,
-                    uid=uid,
-                ),
-                ["name", "partner_id", "amount_total", "invoice_date_due"],
-                uid=uid,
-            )
-            parts.append(f"Factures brouillon ({data.record_count}) :")
-            for r in data.records:
-                parts.append(f"  - {r.get('name')} | {r.get('amount_total')}")
-
-        # Installed modules for any domain — helps LLM know what's available
-        modules = await odoo_client.search_read(
+        # Parallel: domain-specific query + installed modules
+        domain_task = _fetch_domain_data(odoo_client, uid, api_key, domain_id)
+        modules_task = odoo_client.search_read(
             api_key,
             "ir.module.module",
             [("state", "=", "installed")],
@@ -92,7 +41,16 @@ async def fetch_live_context(
             limit=50,
             uid=uid,
         )
-        if modules:
+
+        domain_parts, modules = await asyncio.gather(
+            domain_task,
+            modules_task,
+            return_exceptions=True,
+        )
+
+        if isinstance(domain_parts, list):
+            parts.extend(domain_parts)
+        if isinstance(modules, list) and modules:
             names = [m.get("shortdesc", m.get("name", "")) for m in modules]
             parts.append(f"\nModules installes ({len(modules)}) : {', '.join(names)}")
 
@@ -101,3 +59,69 @@ async def fetch_live_context(
         parts.append(f"(Donnees live non disponibles : {type(exc).__name__})")
 
     return "\n".join(parts) if parts else ""
+
+
+async def _fetch_domain_data(
+    client: IOdooClient,
+    uid: int,
+    api_key: str,
+    domain_id: str,
+) -> list[str]:
+    """Fetch domain-specific data. Returns list of formatted lines."""
+    parts: list[str] = []
+
+    if domain_id == "sales_crm":
+        data = guarded_odoo_read(
+            "sale.order",
+            await client.search_read(
+                api_key,
+                "sale.order",
+                [("state", "in", ["draft", "sent", "sale"])],
+                ["name", "state", "partner_id", "amount_total", "date_order"],
+                limit=10,
+                uid=uid,
+            ),
+            ["name", "state", "partner_id", "amount_total", "date_order"],
+            uid=uid,
+        )
+        parts.append(f"Dernieres commandes ({data.record_count}) :")
+        for r in data.records:
+            parts.append(f"  - {r.get('name')} | {r.get('state')} | {r.get('amount_total')}")
+
+    elif domain_id == "supply_chain":
+        data = guarded_odoo_read(
+            "stock.picking",
+            await client.search_read(
+                api_key,
+                "stock.picking",
+                [("state", "not in", ["done", "cancel"])],
+                ["name", "state", "partner_id", "scheduled_date"],
+                limit=10,
+                uid=uid,
+            ),
+            ["name", "state", "partner_id", "scheduled_date"],
+            uid=uid,
+        )
+        parts.append(f"Transferts en cours ({data.record_count}) :")
+        for r in data.records:
+            parts.append(f"  - {r.get('name')} | {r.get('state')}")
+
+    elif domain_id == "accounting":
+        data = guarded_odoo_read(
+            "account.move",
+            await client.search_read(
+                api_key,
+                "account.move",
+                [("state", "=", "draft"), ("move_type", "=", "out_invoice")],
+                ["name", "partner_id", "amount_total", "invoice_date_due"],
+                limit=10,
+                uid=uid,
+            ),
+            ["name", "partner_id", "amount_total", "invoice_date_due"],
+            uid=uid,
+        )
+        parts.append(f"Factures brouillon ({data.record_count}) :")
+        for r in data.records:
+            parts.append(f"  - {r.get('name')} | {r.get('amount_total')}")
+
+    return parts

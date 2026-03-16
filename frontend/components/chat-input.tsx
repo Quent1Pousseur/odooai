@@ -25,8 +25,8 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
   };
 
   return (
-    <div className="border-t border-gray-200 bg-white p-4">
-      <div className="flex gap-2 max-w-4xl mx-auto">
+    <div className="bg-white px-6 py-4">
+      <div className="flex gap-3 max-w-4xl mx-auto">
         <input
           type="text"
           value={input}
@@ -34,18 +34,29 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
           onKeyDown={handleKeyDown}
           placeholder="Posez votre question sur Odoo..."
           disabled={isLoading}
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
-                     disabled:bg-gray-100 disabled:text-gray-400"
+          className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900
+                     min-h-[48px]
+                     focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
+                     disabled:bg-gray-50 disabled:text-gray-400
+                     placeholder:text-gray-400
+                     transition-all"
         />
         <button
           onClick={handleSubmit}
           disabled={isLoading || !input.trim()}
-          className="bg-primary text-white px-6 py-2 rounded-lg text-sm font-medium
-                     hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed
-                     transition-colors"
+          className="bg-primary text-white px-5 py-3 rounded-xl text-sm font-medium
+                     min-h-[48px] min-w-[100px]
+                     hover:bg-primary/90 active:scale-[0.98]
+                     disabled:opacity-40 disabled:cursor-not-allowed
+                     transition-all"
         >
-          {isLoading ? "..." : "Envoyer"}
+          {isLoading ? (
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-1.5 h-1.5 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            </span>
+          ) : "Envoyer"}
         </button>
       </div>
     </div>

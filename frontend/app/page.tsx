@@ -155,10 +155,15 @@ export default function ChatPage() {
       />
 
       <div className="flex flex-col flex-1 min-w-0">
-        <header className="bg-primary text-white p-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold">OdooAI</h1>
-            <p className="text-sm text-accent">Votre Odoo peut faire plus.</p>
+        <header className="bg-primary text-white px-6 py-4 flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center text-primary font-bold text-sm">
+              AI
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold tracking-tight">OdooAI</h1>
+              <p className="text-xs text-white/60">Business Analyst intelligent</p>
+            </div>
           </div>
           <OdooConnect
             isConnected={odooCreds !== null}
@@ -167,13 +172,31 @@ export default function ChatPage() {
           />
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 bg-gray-50/50">
           {messages.length === 0 && !isLoading && (
-            <div className="text-center text-gray-400 mt-20">
-              <p className="text-lg">Posez une question sur Odoo</p>
-              <p className="text-sm mt-2">
-                &quot;Comment automatiser mes relances ?&quot; · &quot;Quelles fonctionnalites je n&apos;utilise pas ?&quot;
+            <div className="text-center mt-16">
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl text-primary font-bold">AI</span>
+              </div>
+              <p className="text-lg font-medium text-gray-700">Comment puis-je vous aider ?</p>
+              <p className="text-sm text-gray-400 mt-2 max-w-md mx-auto">
+                Posez une question sur votre Odoo — configuration, fonctionnalites cachees, optimisations.
               </p>
+              <div className="flex flex-wrap justify-center gap-2 mt-6">
+                {[
+                  "Quelles fonctionnalites je n'utilise pas ?",
+                  "Comment optimiser mes stocks ?",
+                  "Mes relances sont-elles automatisees ?",
+                ].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => handleSend(q)}
+                    className="text-xs bg-white border border-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:border-primary hover:text-primary transition-colors"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
           {messages.map((msg, i) => (
@@ -183,12 +206,19 @@ export default function ChatPage() {
             <ChatMessage message={{ role: "assistant", content: streamingText }} isStreaming />
           )}
           {isLoading && !streamingText && (
-            <div className="text-gray-400 text-sm animate-pulse">Recherche en cours...</div>
+            <div className="flex items-center gap-3 px-5 py-4 bg-white rounded-2xl border border-gray-100 shadow-sm max-w-[80%]">
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+              <span className="text-sm text-gray-400">OdooAI reflechit...</span>
+            </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="text-xs text-gray-400 text-center px-4 py-1">
+        <div className="text-xs text-gray-400 text-center px-4 py-1.5 bg-white border-t border-gray-100">
           OdooAI ne fournit pas de conseil juridique, fiscal ou comptable.
         </div>
 

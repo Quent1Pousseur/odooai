@@ -2,74 +2,57 @@
 
 ## Phase 1 — Foundation (Mois 1-3)
 
-### Sprint 0 : Setup (termine)
-- [x] Governance framework (42 agents, workflows, specs)
-- [x] ODAI-CORE-001 : Architecture hexagonale (DONE)
-- [x] ODAI-CORE-002 : OdooClient dual-protocole (DONE)
-- [x] ODAI-INFRA-001 : CI/CD GitHub Actions (DONE)
-- [x] ODAI-CORE-003 : Config fail-fast + structlog (DONE)
-- [x] ODAI-SEC-001 : Security Guardian + hardening (DONE)
-- [x] Kick-off + daily + retro (DONE)
+### Sprint 1 Semaine 1 (termine — 7/7 pistes)
+- [x] ODAI-CORE-001 : Architecture hexagonale
+- [x] ODAI-CORE-002 : OdooClient dual-protocole + read_group + name_search
+- [x] ODAI-INFRA-001 : CI/CD GitHub Actions
+- [x] ODAI-CORE-003 : Config fail-fast + structlog
+- [x] ODAI-SEC-001 : Security Guardian + hardening (22 issues, 11 corrigees)
+- [x] ODAI-DATA-001 : Knowledge Graphs + Code Analyst (1218 modules, 0 echecs)
+- [x] ODAI-API-001 : CLI (odooai analyze, check-kg, serve)
+- [x] ODAI-BIZ-001 : Pitch, personas, cost model, LGPL, matrice concurrentielle
+- [x] Repo GitHub private + CI/CD operationnel
 
-### Sprint 1 : Infrastructure + Business (17-30 mars 2026)
+### Sprint 1 Semaine 2 (24-28 mars 2026)
 
-> 7 pistes paralleles. Chaque agent a un livrable.
+#### PISTE A — KG Quality + BA Profiles (chemin critique)
+- [ ] KG quality check : sale.order vs realite — Odoo Expert (10) — Lun
+- [ ] Schema BA Profile (Pydantic) — AI Eng (09) + Prompt Eng (25) — Lun
+- [ ] Prompt BA Factory + tests — AI Eng (09) + Prompt Eng (25) — Mar
+- [ ] Criteres d'eval BA Profiles — Prompt Eng (25) + Odoo Expert (10) — Mar
+- [ ] BA Profile Generator — AI Eng (09) + Backend Arch (08) — Mer
+- [ ] Generer BA Profile `sale` — AI Eng (09) — Mer
+- [ ] Validation BA Profile par Odoo Expert — Odoo Expert (10) — Jeu
+- [ ] Review interne — Security Arch (07) — Ven
 
-#### PISTE 1 — DATA-001 : Knowledge Graphs (chemin critique technique)
-- [ ] Schemas Pydantic KG — AI Eng (09) + Data Eng (11) — Lun 17
-- [ ] Validation schemas — Odoo Expert (10) — Lun 17
-- [ ] manifest_parser.py — Backend Arch (08) — Mar 18
-- [ ] Fixtures test (vrais modules) — QA Lead (13) + Odoo Expert (10) — Mar 18
-- [ ] python_parser.py (AST) — Backend Arch (08) — Mer 19
-- [ ] xml_parser.py — Backend Arch (08) — Jeu 20
-- [ ] analyzer.py + storage.py + tests — Backend Arch (08) + QA (13) — Ven 21
-- [ ] Review interne DATA-001 — Security Arch (07) + Odoo Expert (10) — Ven 21
+#### PISTE B — Orchestrator + Chat CLI
+- [ ] Spec ODAI-AGENT-001 Orchestrator — Backend Arch (08) + CTO (02) — Mer
+- [ ] Orchestrator implementation — Backend Arch (08) — Jeu
+- [ ] Wire Guardian dans pipeline — Backend Arch (08) — Jeu
+- [ ] Chat CLI (`odooai chat`) — Senior Dev (19) — Ven
+- [ ] **Fondateur teste** — Ven
 
-#### PISTE 2 — CORE-002 update
-- [ ] Ajouter read_group + name_search — Backend Arch (08) — Lun 17
-- [ ] Review independante — Senior Dev (19) — Lun 17
+#### PISTE C — Business (action fondateur)
+- [ ] Envoyer 5+ messages LinkedIn PME — Fondateur — Lun-Ven
+- [ ] RDV avocat LGPL — Fondateur — Lun
+- [ ] README Getting Started — Technical Writer (29) — Mer
 
-#### PISTE 3 — Infra
-- [ ] Repo GitHub private + premier push — DevOps (22) — Lun 17
-- [ ] CI/CD passe sur GitHub — DevOps (22) — Mar 18
-
-#### PISTE 4 — Validation marche
-- [ ] Pitch 10 mots — Sales (05) + CEO (01) — Lun 17
-- [ ] 3 personas finalisees — CPO (03) — Lun 17
-- [ ] Mockup chat Figma — UX Designer (27) — Mar 18
-- [ ] 10 PME cibles identifiees — Sales (05) + BizDev (32) — Mar 18
-- [ ] One-pager OdooAI — Brand Designer (42) — Mer 19
-- [ ] Script interview — CPO (03) + Customer Success (17) — Mer 19
-- [ ] Premiers contacts PME (3-5) — Sales (05) — Jeu 20-Ven 21
-
-#### PISTE 5 — Finance & Legal
-- [ ] Estimations tokens par requete — AI Eng (09) — Lun 17
-- [ ] Modele de cout LLM v1 — CFO (15) — Mar 18
-- [ ] Question juridique LGPL — Legal (16) — Mer 19
-- [ ] Disclaimer systeme AI — AI Safety (33) + Legal (16) — Mer 19
-
-#### PISTE 6 — Strategie
-- [ ] Matrice concurrentielle — Competitive Intel (34) — Ven 21
-- [ ] Definir aha moment — SaaS Arch (06) + CPO (03) — Mer 19
-- [ ] SLOs cibles — SRE (23) — Ven 21
-
-#### PISTE 7 — Qualite
-- [ ] Review CORE-001 + CORE-002 — Security Arch (07) — Lun 17
-- [ ] Criteres eval BA Profiles — Prompt Eng (25) + Odoo Expert (10) — Ven 21
-- [ ] Plan red teaming Sprint 2 — Security Auditor (14) — Ven 21
+#### PISTE D — Qualite
+- [ ] Sanitizer strings KG avant prompt — Security Arch (07) — Lun
+- [ ] Plan red teaming Sprint 2 — Security Auditor (14) — Ven
+- [ ] Instrumenter tokens LLM — AI Eng (09) — Ven
 
 ### Stubs actifs (dette technique)
 
 | Stub | Localisation | Remplit par | Deadline |
 |------|-------------|------------|----------|
-| AnthropicProvider | infrastructure/llm/ | ODAI-AGENT-XXX | Sprint 2 |
+| AnthropicProvider | infrastructure/llm/ | PISTE A (BA Factory) | Semaine 2 |
 | Database engine | infrastructure/db/ | Quand necessaire | Sprint 2 |
 | RedisClient (vrai Redis) | infrastructure/cache/ | Quand necessaire | Sprint 2 |
-| Guardian pas wire | security/guardian.py | ODAI-AGENT-XXX (Orchestrator) | Sprint 2 |
+| Guardian pas wire | security/guardian.py | PISTE B (Orchestrator) | Semaine 2 |
 
 ### VETOs en attente
 
 | Agent | Sujet | Impact | Status |
 |-------|-------|--------|--------|
-| Legal (16) | LGPL extraction code Odoo | Peut impacter distribution | En cours |
-| Odoo Expert (10) | _inherits + related dans KG | KG incomplet si absent | A integrer DATA-001 |
+| Legal (16) | LGPL extraction code Odoo | Peut impacter distribution | Fondateur doit consulter avocat |

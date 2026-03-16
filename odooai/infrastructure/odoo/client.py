@@ -90,6 +90,71 @@ class OdooClient(IOdooClient):
             json2_body={"domain": domain},
         )
 
+    async def read_group(
+        self,
+        api_key: str,
+        model: str,
+        domain: list[Any],
+        fields: list[str],
+        groupby: list[str],
+        uid: int = 0,
+        order: str | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """Aggregate records using GROUP BY."""
+        kw: dict[str, Any] = {}
+        if order:
+            kw["orderby"] = order
+        if limit is not None:
+            kw["limit"] = limit
+        json2_body: dict[str, Any] = {
+            "domain": domain,
+            "fields": fields,
+            "groupby": groupby,
+        }
+        if order:
+            json2_body["orderby"] = order
+        if limit is not None:
+            json2_body["limit"] = limit
+        return await self._call(  # type: ignore[no-any-return]
+            api_key,
+            uid,
+            model,
+            "read_group",
+            args=[domain, fields, groupby],
+            kwargs=kw,
+            json2_body=json2_body,
+        )
+
+    async def name_search(
+        self,
+        api_key: str,
+        model: str,
+        name: str,
+        domain: list[Any] | None = None,
+        limit: int = 10,
+        uid: int = 0,
+    ) -> list[dict[str, Any]]:
+        """Search records by display name. Returns list of {id, name} dicts."""
+        args = domain or []
+        raw = await self._call(
+            api_key,
+            uid,
+            model,
+            "name_search",
+            args=[name],
+            kwargs={"args": args, "limit": limit},
+            json2_body={"name": name, "args": args, "limit": limit},
+        )
+        # Odoo returns [[id, name], ...] — normalize to [{id, name}, ...]
+        if isinstance(raw, list):
+            return [
+                {"id": r[0], "name": r[1]}
+                for r in raw
+                if isinstance(r, (list, tuple)) and len(r) >= 2
+            ]
+        return []
+
     async def create(
         self,
         api_key: str,
@@ -188,8 +253,6 @@ class OdooClient(IOdooClient):
                 return bool(result)
             except Exception:
                 return False
-
-        # JSON-2: probe with search_count (Odoo enforces access automatically)
         try:
             await json2_call(
                 self._base_url,

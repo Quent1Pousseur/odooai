@@ -51,6 +51,32 @@ class IOdooClient(ABC):
         """Count records matching a domain."""
 
     @abstractmethod
+    async def read_group(
+        self,
+        api_key: str,
+        model: str,
+        domain: list[Any],
+        fields: list[str],
+        groupby: list[str],
+        uid: int = 0,
+        order: str | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """Aggregate records using GROUP BY (Odoo read_group)."""
+
+    @abstractmethod
+    async def name_search(
+        self,
+        api_key: str,
+        model: str,
+        name: str,
+        domain: list[Any] | None = None,
+        limit: int = 10,
+        uid: int = 0,
+    ) -> list[dict[str, Any]]:
+        """Search records by display name. Returns list of {id, name} dicts."""
+
+    @abstractmethod
     async def create(
         self,
         api_key: str,

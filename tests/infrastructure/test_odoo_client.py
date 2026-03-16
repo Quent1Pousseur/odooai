@@ -94,6 +94,39 @@ class TestOdooClientRouting:
             assert result == [{"id": 1, "name": "SO001"}]
 
     @pytest.mark.asyncio
+    async def test_read_group_routes_json2(self) -> None:
+        with patch(
+            "odooai.infrastructure.odoo.client.json2_call",
+            new_callable=AsyncMock,
+        ) as mock:
+            mock.return_value = [{"state": "draft", "__count": 5}]
+            client = OdooClient("https://odoo.test", "mydb", OdooApiType.JSON2)
+            result = await client.read_group(
+                api_key="key",
+                model="sale.order",
+                domain=[],
+                fields=["state"],
+                groupby=["state"],
+            )
+            assert result == [{"state": "draft", "__count": 5}]
+
+    @pytest.mark.asyncio
+    async def test_name_search_normalizes(self) -> None:
+        with patch(
+            "odooai.infrastructure.odoo.client.json2_call",
+            new_callable=AsyncMock,
+        ) as mock:
+            # Odoo returns [[id, name], ...] — client normalizes to [{id, name}]
+            mock.return_value = [[1, "Acme Corp"], [2, "Beta Inc"]]
+            client = OdooClient("https://odoo.test", "mydb", OdooApiType.JSON2)
+            result = await client.name_search(
+                api_key="key",
+                model="res.partner",
+                name="Acme",
+            )
+            assert result == [{"id": 1, "name": "Acme Corp"}, {"id": 2, "name": "Beta Inc"}]
+
+    @pytest.mark.asyncio
     async def test_xmlrpc_requires_uid(self) -> None:
         client = OdooClient("https://odoo.test", "mydb", OdooApiType.XML_RPC)
         with pytest.raises(OdooConnectionError, match="requires uid"):

@@ -9,12 +9,17 @@ Dependencies: agents/ba_agent, knowledge/storage
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import structlog
 
 from odooai.agents.ba_agent import AgentResponse, ask_ba_agent
+from odooai.domain.value_objects.model_category import ModelCategory
+from odooai.domain.value_objects.sanitized_response import SanitizedResponse
 from odooai.knowledge.ba_factory import DOMAIN_NAMES
 from odooai.knowledge.schemas.ba_profile import BAProfile
+from odooai.security.domain_validator import validate_domain
+from odooai.security.guardian import guard_method, guard_model_access, sanitize_response
 
 logger = structlog.get_logger(__name__)
 
@@ -117,6 +122,67 @@ def load_ba_profile(
     except Exception as exc:
         logger.error("Failed to load BA Profile", domain=domain_id, error=str(exc))
         return None
+
+
+def guarded_odoo_read(
+    model: str,
+    records: list[dict[str, Any]],
+    requested_fields: list[str],
+    uid: int = 0,
+) -> SanitizedResponse:
+    """
+    Security gate for Odoo data: classify → sanitize → audit.
+
+    Must be called after every Odoo read operation before data reaches the LLM.
+
+    Args:
+        model: Odoo model name.
+        records: Raw records from OdooClient.
+        requested_fields: Fields that were requested.
+        uid: Odoo user ID.
+
+    Returns:
+        SanitizedResponse with anonymized data.
+
+    Raises:
+        BlockedModelError: If model is BLOCKED.
+    """
+    category = guard_model_access(model)
+    return sanitize_response(
+        model=model,
+        category=category,
+        records=records,
+        requested_fields=requested_fields,
+        uid=uid,
+    )
+
+
+def guarded_odoo_write_check(
+    model: str, method: str, domain: list[Any] | None = None
+) -> ModelCategory:
+    """
+    Security gate for Odoo write/execute operations.
+
+    Must be called before any write, create, or execute operation.
+
+    Args:
+        model: Odoo model name.
+        method: Odoo method to call.
+        domain: Domain filter (validated if provided).
+
+    Returns:
+        ModelCategory of the model.
+
+    Raises:
+        BlockedModelError: If model is BLOCKED.
+        BlockedMethodError: If method is blocked (unlink, sudo).
+        DomainInjectionError: If domain is malicious.
+    """
+    category = guard_model_access(model)
+    guard_method(method)
+    if domain is not None:
+        validate_domain(domain)
+    return category
 
 
 async def handle_question(

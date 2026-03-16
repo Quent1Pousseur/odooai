@@ -18,6 +18,17 @@ from odooai.knowledge.schemas.ba_profile import BAProfile
 
 logger = structlog.get_logger(__name__)
 
+_TOOL_LABELS: dict[str, str] = {
+    "odoo_search_read": "Analyse de vos donnees",
+    "odoo_search_count": "Comptage des enregistrements",
+    "odoo_read_group": "Calcul des statistiques",
+}
+
+
+def _tool_message(tool_name: str) -> str:
+    """Human-readable message for a tool call."""
+    return _TOOL_LABELS.get(tool_name, "Recherche en cours")
+
 
 async def stream_ba_response(
     question: str,
@@ -60,7 +71,7 @@ Question de l'utilisateur :
         try:
             with client.messages.stream(
                 model=model,
-                max_tokens=2048,
+                max_tokens=4096,
                 system=SYSTEM_PROMPT,
                 messages=messages,  # type: ignore[arg-type]
                 tools=use_tools if use_tools else anthropic.NOT_GIVEN,  # type: ignore[arg-type]
@@ -78,7 +89,11 @@ Question de l'utilisateur :
                             # Tool use starting
                             current_tool_name = block.name
                             current_tool_input = ""
-                            yield {"type": "tool_start", "tool": current_tool_name}
+                            yield {
+                                "type": "tool_start",
+                                "tool": current_tool_name,
+                                "message": _tool_message(current_tool_name),
+                            }
 
                     elif event.type == "content_block_delta":
                         delta = event.delta
@@ -114,7 +129,11 @@ Question de l'utilisateur :
             for block in collected_content:
                 if block.type == "tool_use":
                     tool_calls_made += 1
-                    yield {"type": "tool_start", "tool": block.name}
+                    yield {
+                        "type": "tool_start",
+                        "tool": block.name,
+                        "message": _tool_message(block.name),
+                    }
                     result = await execute_tool(
                         block.name,
                         block.input,

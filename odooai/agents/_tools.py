@@ -68,6 +68,38 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "required": ["model", "domain"],
         },
     },
+    {
+        "name": "odoo_read_group",
+        "description": (
+            "Group and aggregate records from Odoo. "
+            "Use this for statistics: totals, averages, counts by group. "
+            "Example: total revenue by salesperson, count of orders by state."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "model": {
+                    "type": "string",
+                    "description": "Odoo model technical name",
+                },
+                "domain": {
+                    "type": "array",
+                    "description": "Odoo domain filter",
+                },
+                "groupby": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Fields to group by (e.g. ['state', 'user_id'])",
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Fields to aggregate (e.g. ['amount_total:sum'])",
+                },
+            },
+            "required": ["model", "domain", "groupby", "fields"],
+        },
+    },
 ]
 
 
@@ -151,6 +183,8 @@ async def execute_tool(
             return await _exec_search_read(tool_input, odoo_client, uid, api_key)
         if tool_name == "odoo_search_count":
             return await _exec_search_count(tool_input, odoo_client, uid, api_key)
+        if tool_name == "odoo_read_group":
+            return await _exec_read_group(tool_input, odoo_client, uid, api_key)
         return f"Unknown tool: {tool_name}"
     except Exception as exc:
         user_msg = getattr(exc, "user_message", str(exc))
@@ -216,3 +250,33 @@ async def _exec_search_count(
     count = await client.search_count(api_key, model, domain, uid=uid)
 
     return f"{count} enregistrement(s) {model} correspondent a ce filtre."
+
+
+async def _exec_read_group(
+    inp: dict[str, Any],
+    client: IOdooClient,
+    uid: int,
+    api_key: str,
+) -> str:
+    """Execute odoo_read_group with Guardian validation."""
+    model = str(inp.get("model", ""))
+    domain = _normalize_domain(inp.get("domain", []))
+    groupby = _normalize_list(inp.get("groupby", []))
+    fields = _normalize_list(inp.get("fields", ["__count"]))
+
+    # Guardian gates
+    guarded_odoo_write_check(model, "read_group", domain)
+
+    # Execute
+    raw = await client.read_group(api_key, model, domain, fields, groupby, uid=uid)
+
+    # Format for LLM
+    if not raw:
+        return f"Aucun resultat pour le regroupement {model}."
+
+    lines = [f"{len(raw)} groupe(s) {model} :"]
+    for group in raw:
+        parts = [f"{k}={v}" for k, v in group.items() if not k.startswith("__")]
+        lines.append(f"  - {', '.join(parts)}")
+
+    return "\n".join(lines)

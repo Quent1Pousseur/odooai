@@ -112,7 +112,8 @@ export default function ChatPage() {
             } else if (data.type === "conversation_id") {
               setCurrentConversationId(data.content);
             } else if (data.type === "tool_start") {
-              fullText += `\n🔍 *Recherche (${data.tool})...*\n`;
+              const msg = data.message || "Recherche en cours";
+              fullText += `\n> ${msg}...\n\n`;
               setStreamingText(fullText);
             } else if (data.type === "done") {
               tokens = data.tokens || 0;

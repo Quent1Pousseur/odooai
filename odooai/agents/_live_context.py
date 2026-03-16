@@ -83,6 +83,19 @@ async def fetch_live_context(
             for r in data.records:
                 parts.append(f"  - {r.get('name')} | {r.get('amount_total')}")
 
+        # Installed modules for any domain — helps LLM know what's available
+        modules = await odoo_client.search_read(
+            api_key,
+            "ir.module.module",
+            [("state", "=", "installed")],
+            ["name", "shortdesc"],
+            limit=50,
+            uid=uid,
+        )
+        if modules:
+            names = [m.get("shortdesc", m.get("name", "")) for m in modules]
+            parts.append(f"\nModules installes ({len(modules)}) : {', '.join(names)}")
+
     except Exception as exc:
         logger.warning("Failed to fetch live data", domain=domain_id, error=str(exc))
         parts.append(f"(Donnees live non disponibles : {type(exc).__name__})")

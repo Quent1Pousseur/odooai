@@ -66,7 +66,7 @@ export function OdooConnect({ onConnect, onDisconnect, isConnected }: OdooConnec
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="https://mon-odoo.com ou http://localhost:8069"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full border rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-primary focus:outline-none"
                 />
               </div>
 
@@ -77,7 +77,7 @@ export function OdooConnect({ onConnect, onDisconnect, isConnected }: OdooConnec
                   value={db}
                   onChange={(e) => setDb(e.target.value)}
                   placeholder="ma-base"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full border rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-primary focus:outline-none"
                 />
               </div>
 
@@ -88,7 +88,7 @@ export function OdooConnect({ onConnect, onDisconnect, isConnected }: OdooConnec
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
                   placeholder="admin@monentreprise.com"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full border rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-primary focus:outline-none"
                 />
               </div>
 
@@ -99,7 +99,7 @@ export function OdooConnect({ onConnect, onDisconnect, isConnected }: OdooConnec
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="Votre cle API Odoo"
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full border rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-primary focus:outline-none"
                 />
                 <p className="text-xs text-gray-400 mt-1">
                   Odoo &gt; Parametres &gt; Utilisateurs &gt; Cles API

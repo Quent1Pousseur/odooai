@@ -71,6 +71,51 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
 ]
 
 
+def _normalize_domain(domain: Any) -> list[Any]:
+    """
+    Normalize LLM-generated domains to valid Odoo format.
+
+    The LLM sometimes generates:
+    - Nested lists: [["field", "=", "value"]] (correct)
+    - Flat tuples: [("field", "=", "value")] (correct)
+    - Dicts: [{"field": "state", "operator": "=", "value": "draft"}] (wrong)
+    - Strings: "[('field','=','value')]" (wrong)
+    """
+    if isinstance(domain, str):
+        # Try to parse string representation
+        try:
+            import ast
+
+            parsed = ast.literal_eval(domain)
+            if isinstance(parsed, list):
+                return parsed
+        except (ValueError, SyntaxError):
+            pass
+        return []
+
+    if not isinstance(domain, list):
+        return []
+
+    normalized: list[Any] = []
+    for item in domain:
+        if isinstance(item, dict):
+            # Convert {"field": "x", "operator": "=", "value": "y"} → ["x", "=", "y"]
+            field = item.get("field", item.get("name", ""))
+            operator = item.get("operator", item.get("op", "="))
+            value = item.get("value", "")
+            if field:
+                normalized.append([str(field), str(operator), value])
+        elif isinstance(item, str):
+            # Logical operator (&, |, !)
+            normalized.append(item)
+        elif isinstance(item, (list, tuple)):
+            normalized.append(list(item))
+        else:
+            normalized.append(item)
+
+    return normalized
+
+
 async def execute_tool(
     tool_name: str,
     tool_input: dict[str, Any],
@@ -91,7 +136,12 @@ async def execute_tool(
         return f"Unknown tool: {tool_name}"
     except Exception as exc:
         user_msg = getattr(exc, "user_message", str(exc))
-        logger.warning("Tool execution failed", tool=tool_name, error=user_msg)
+        logger.warning(
+            "Tool execution failed",
+            tool=tool_name,
+            error=user_msg,
+            input=str(tool_input)[:200],
+        )
         return f"Erreur: {user_msg}"
 
 
@@ -103,7 +153,7 @@ async def _exec_search_read(
 ) -> str:
     """Execute odoo_search_read with Guardian validation."""
     model = str(inp.get("model", ""))
-    domain = inp.get("domain", [])
+    domain = _normalize_domain(inp.get("domain", []))
     fields = inp.get("fields", ["name"])
     limit = min(int(inp.get("limit", 10)), 20)  # Cap at 20
 
@@ -139,7 +189,7 @@ async def _exec_search_count(
 ) -> str:
     """Execute odoo_search_count with Guardian validation."""
     model = str(inp.get("model", ""))
-    domain = inp.get("domain", [])
+    domain = _normalize_domain(inp.get("domain", []))
 
     # Guardian gates
     guarded_odoo_write_check(model, "search_count", domain)

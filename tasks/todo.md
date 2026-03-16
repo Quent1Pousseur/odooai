@@ -1,33 +1,37 @@
 # OdooAI — Todo
 
 ## Sprint 1 (termine)
-- [x] 9 specs + MVP CLI + 1218 KG + 9 BA Profiles + business deliverables
+- [x] 9 specs, MVP CLI, 1218 KG, 9 BA Profiles, business deliverables
 
-## Sprint 2 (en cours)
+## Sprint 2 (termine — 4/5 pistes, Piste D en attente fondateur)
+- [x] AGENT-002 Guardian wire
+- [x] CORE-004 Connexion live (XML-RPC auto-detect)
+- [x] AGENT-003 Tool-use
+- [x] UI-001 Frontend Next.js + chat streaming
+- [x] README, BA validation, privacy draft, red team plan
+- [ ] Contacts PME + avocat (fondateur)
 
-### PISTE A — Guardian wire + Connexion live + Tool-use (DONE)
-- [x] ODAI-AGENT-002 Guardian wire (spec + review)
-- [x] ODAI-CORE-004 Connexion live auto-detect XML-RPC/JSON2
-- [x] ODAI-AGENT-003 Tool-use (LLM genere ses requetes Odoo)
-- [x] Agent 43 Chat & Realtime Engineer
-- [x] 5 bugfixes live (domain/fields normalisation, empty response, retry, max-tools)
+## Sprint 3 (14-28 avril 2026)
 
-### PISTE B — Frontend Next.js + Chat
-- [ ] Spec ODAI-UI-001 (Frontend scaffold + chat) — Frontend Eng (21) + Chat Eng (43)
-- [ ] Scaffold Next.js + Tailwind + Shadcn
-- [ ] Chat page avec streaming SSE
-- [ ] Integration backend API → frontend
+### PISTE A — Streaming natif + Conversations
+- [ ] Spec ODAI-AGENT-004 (streaming natif Anthropic) — AI Eng (09) + Chat Eng (43)
+- [ ] Streaming backend (anthropic.stream) — AI Eng (09)
+- [ ] Streaming frontend (Vercel AI SDK useChat) — Frontend Eng (21)
+- [ ] Spec ODAI-CORE-005 (DB models + conversations) — DBA (30) + Chat Eng (43)
+- [ ] SQLAlchemy models (User, Conversation, Message) — DBA (30)
+- [ ] Conversation persistence + historique — Chat Eng (43)
 
-### PISTE C — BA Profile validation
-- [ ] Relire sales_crm BA Profile — Odoo Expert (10)
-- [ ] Relire accounting BA Profile — Odoo Expert (10)
-- [ ] Rapport + corrections
+### PISTE B — Securite
+- [ ] Red teaming (8 scenarios) — Security Auditor (14)
+- [ ] Corrections des findings — Backend Arch (08)
+- [ ] Spec ODAI-SEC-002 (rate limiting) — SRE (23)
+- [ ] Rate limiting API — SRE (23) + Backend Arch (08)
+
+### PISTE C — Intelligence
+- [ ] Valider accounting BA Profile — Odoo Expert (10)
+- [ ] Edition Community/Enterprise dans FeatureDiscovery — AI Eng (09)
 
 ### PISTE D — Business (fondateur)
-- [ ] 5 messages LinkedIn PME — Fondateur
-- [ ] RDV avocat LGPL — Fondateur
-- [ ] README Getting Started — Technical Writer (29)
-
-### PISTE E — Qualite + Legal
-- [ ] Politique de confidentialite draft — Legal (16)
-- [ ] Plan red teaming — Security Auditor (14)
+- [ ] 5 contacts PME — Fondateur
+- [ ] RDV avocat LGPL + privacy — Fondateur
+- [ ] Landing page "coming soon" — Brand Designer (42) + Growth (18)

@@ -1,4 +1,4 @@
-# OdooAI — Equipe Complete (42 agents)
+# OdooAI — Equipe Complete (43 agents)
 
 ## Documents de Reference
 
@@ -115,6 +115,7 @@
 ### DESIGN (2 agents)
 27 - UX/Product Designer — Design system, chat UI, onboarding, accessibilite
 42 - Brand Designer — Identite visuelle, logo, brand book, marketing visuals, coherence
+43 - Chat & Realtime Engineer — Architecture chat, streaming, multi-conversation, multi-user
 
 ### SUPPORT (1 agent)
 41 - Support Engineer — Tickets, troubleshooting, billing, SLA, escalation

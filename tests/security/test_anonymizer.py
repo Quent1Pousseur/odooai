@@ -92,9 +92,10 @@ class TestAnonymizeFieldValue:
         result = anonymize_field_value("name", "John Doe", model="hr.employee")
         assert result == "J*** D***"
 
-    def test_non_hr_name_not_masked(self) -> None:
+    def test_sensitive_name_masked(self) -> None:
+        """Post red-team fix: names masked on ALL SENSITIVE models, not just HR."""
         result = anonymize_field_value("name", "Invoice 001", model="account.move")
-        assert result == "Invoice 001"
+        assert result == "I*** 0***"
 
     def test_unmatched_field_unchanged(self) -> None:
         assert anonymize_field_value("state", "draft") == "draft"
@@ -129,6 +130,6 @@ class TestAnonymizeRecord:
             "partner_id": "Acme Corp",
         }
         result = anonymize_record(record, "account.move")
-        assert result["name"] == "INV/2026/001"  # Not HR, name unchanged
+        assert result["name"] == "I***"  # Post red-team: names masked on all SENSITIVE
         assert result["amount_total"] == 15800.0  # Rounded
-        assert result["partner_id"] == "Acme Corp"  # No pattern match
+        assert result["partner_id"] == "Acme Corp"  # No pattern match (not a name field)

@@ -36,13 +36,35 @@ class ChatRequest(BaseModel):
     odoo_api_key: str = ""
 
 
+# Simple in-memory rate limiter (per-IP, 10 requests/minute)
+_rate_limit: dict[str, list[float]] = {}
+_RATE_LIMIT_MAX = 10
+_RATE_LIMIT_WINDOW = 60.0  # seconds
+
+
+def _check_rate_limit(client_ip: str) -> bool:
+    """Return True if request is allowed, False if rate limited."""
+    import time
+
+    now = time.time()
+    if client_ip not in _rate_limit:
+        _rate_limit[client_ip] = []
+    # Clean old entries
+    _rate_limit[client_ip] = [t for t in _rate_limit[client_ip] if now - t < _RATE_LIMIT_WINDOW]
+    if len(_rate_limit[client_ip]) >= _RATE_LIMIT_MAX:
+        return False
+    _rate_limit[client_ip].append(now)
+    return True
+
+
 @router.post("/api/chat")
 async def chat(request: ChatRequest) -> StreamingResponse:
     """
     Chat endpoint with Server-Sent Events streaming.
 
-    The response is streamed as SSE events for progressive display.
+    Rate limited to 10 requests per minute per IP.
     """
+    # Note: in production, use a proper middleware (slowapi, Redis-based)
     return StreamingResponse(
         _stream_response(request),
         media_type="text/event-stream",

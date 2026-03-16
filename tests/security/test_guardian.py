@@ -127,7 +127,8 @@ class TestSanitizeResponse:
         )
         assert result.records[0]["name"] == "J*** D***"
 
-    def test_sensitive_non_hr_names_not_masked(self) -> None:
+    def test_sensitive_non_hr_names_now_masked(self) -> None:
+        """Post red-team: names masked on ALL SENSITIVE models (prompt injection prevention)."""
         records = [{"id": 1, "name": "Invoice 001"}]
         result = sanitize_response(
             model="account.move",
@@ -135,8 +136,7 @@ class TestSanitizeResponse:
             records=records,
             requested_fields=["id", "name"],
         )
-        # Non-HR model: name should NOT be masked
-        assert result.records[0]["name"] == "Invoice 001"
+        assert result.records[0]["name"] == "I*** 0***"
 
     def test_open_no_processing(self) -> None:
         records = [{"id": 1, "name": "Product A", "list_price": 99.99}]

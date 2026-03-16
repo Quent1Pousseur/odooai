@@ -80,10 +80,15 @@ Question de l'utilisateur :
 
     messages: list[dict[str, Any]] = [{"role": "user", "content": user_message}]
     total_tokens = 0
+    max_token_budget = 50000  # Stop if token budget exceeded
 
     # Tool-use loop
     tool_calls_made = 0
     for _i in range(max_tools + 1):
+        if total_tokens > max_token_budget:
+            logger.warning("Token budget exceeded", tokens=total_tokens)
+            break
+
         use_tools = tools if tools and tool_calls_made < max_tools else []
 
         # Retry on overloaded errors

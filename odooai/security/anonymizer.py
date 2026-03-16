@@ -145,8 +145,11 @@ def anonymize_field_value(
             return mask_phone(value)
         return value
 
-    # Mask names only on HR models (employee names are sensitive)
-    if model.startswith("hr.") and any(p in lower for p in _NAME_PATTERNS_HR):
+    # Mask names on ALL SENSITIVE models (prevents prompt injection via names)
+    sensitive_name_prefixes = ("hr.", "res.partner", "account.", "mail.message")
+    if any(model.startswith(p) for p in sensitive_name_prefixes) and any(
+        p in lower for p in _NAME_PATTERNS_HR
+    ):
         if isinstance(value, str):
             return mask_name(value)
         return value

@@ -103,26 +103,39 @@ FONDATEUR (00) — Autorite supreme, decideur final
 ### QUALITY & ETHICS
 | Agent | Reports to | Delegates to | Reviewed by |
 |-------|-----------|-------------|------------|
-| 13 QA Lead | CTO | — | CTO |
+| 13 QA Lead | CTO | QA Automation Eng | CTO |
 | 31 Chaos Engineer | SRE + CTO | — | SRE, CTO |
 | 33 AI Safety | CTO + Legal | — | CTO, Legal |
+| 48 QA Automation Engineer | QA Lead | — | QA Lead, Backend Architect |
 
 ### LEGAL
 | Agent | Reports to | Delegates to | Reviewed by |
 |-------|-----------|-------------|------------|
 | 16 Legal | CEO | — | CEO, Fondateur |
 
-### GROWTH & CONTENT
+### GROWTH, CONTENT & MARKETING
 | Agent | Reports to | Delegates to | Reviewed by |
 |-------|-----------|-------------|------------|
 | 18 Growth Engineer | CPO | — | CPO, CFO |
 | 37 Content Strategist | CPO + Sales | — | CPO, Sales |
 | 29 Technical Writer | CPO | — | CPO, Backend Architect (API docs) |
+| 46 Product Marketing Manager | CPO + Sales | — | CEO, CPO |
+
+### COMMUNITY
+| Agent | Reports to | Delegates to | Reviewed by |
+|-------|-----------|-------------|------------|
+| 47 Community Manager | CPO + BizDev | — | CPO, CEO |
 
 ### i18n
 | Agent | Reports to | Delegates to | Reviewed by |
 |-------|-----------|-------------|------------|
 | 36 i18n Lead | CPO | — | CPO, Frontend Eng |
+
+### HUMAN RESOURCES
+| Agent | Reports to | Delegates to | Reviewed by |
+|-------|-----------|-------------|------------|
+| 44 HR Director | CEO, Fondateur | Wellbeing Officer | CEO, Fondateur |
+| 45 Wellbeing Officer | HR Director | — | HR Director, CEO |
 
 ### SUPPORT
 | Agent | Reports to | Delegates to | Reviewed by |

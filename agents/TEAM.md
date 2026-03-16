@@ -1,4 +1,4 @@
-# OdooAI — Equipe Complete (43 agents)
+# OdooAI — Equipe Complete (48 agents)
 
 ## Documents de Reference
 
@@ -117,6 +117,10 @@
 42 - Brand Designer — Identite visuelle, logo, brand book, marketing visuals, coherence
 43 - Chat & Realtime Engineer — Architecture chat, streaming, multi-conversation, multi-user
 
+### HUMAN RESOURCES (2 agents)
+44 - HR Director — Gestion talents, profiling DISC, communication, mediation, culture
+45 - Wellbeing Officer — Bien-etre, prevention burnout, charge/capacite, reconnaissance
+
 ### SUPPORT (1 agent)
 41 - Support Engineer — Tickets, troubleshooting, billing, SLA, escalation
 
@@ -124,18 +128,23 @@
 28 - Data Scientist — Prediction churn, routing LLM optimal, cost forecasting, embeddings
 30 - DBA & Performance Engineer — Query optimization, caching, Knowledge Graph storage
 
-### RESILIENCE & QUALITY (3 agents)
+### RESILIENCE & QUALITY (4 agents)
 13 - QA Lead — Tests, couverture, evals LLM, definition of done
 31 - Chaos Engineer — Fault injection, game days, disaster recovery, antifragilite
 33 - AI Safety & Ethics Officer — Risques IA, anti-hallucination, EU AI Act
+48 - QA Automation Engineer — Tests E2E Playwright, integration API, eval LLM auto, CI quality gates
 
 ### LEGAL (1 agent)
 16 - Legal & Compliance — GDPR, contrats, licences, responsabilite IA
 
-### GROWTH & CONTENT (3 agents)
+### GROWTH, CONTENT & MARKETING (4 agents)
 18 - Growth Engineer — Analytics, funnels, experimentation, viral loops
 37 - Content Strategist — Blog, SEO, LinkedIn, email campaigns, case studies
 29 - Technical Writer — API docs, guides utilisateur, in-app help
+46 - Product Marketing Manager — Positionnement, messaging, case studies, battle cards, launch
+
+### COMMUNITY (1 agent)
+47 - Community Manager — Ecosysteme Odoo, forums, reseaux sociaux, events, feedback users
 
 ### INTERNATIONALIZATION (1 agent)
 36 - i18n Lead — Multilingual, localisation, adaptation culturelle, 180+ pays
@@ -171,6 +180,11 @@
 
                               QA Lead
                          (review tout le monde)
+
+                            HR Director
+                               |
+                         Wellbeing Officer
+                     (veille sur tout le monde)
 ```
 
 ---
@@ -201,6 +215,13 @@
 | Onboarding / retention            | Customer Success → CPO + Growth + Sales + Frontend         |
 | Conformite / legal                | Legal → Security Architect + CEO + DevSecOps               |
 | Budget / projection               | CFO → CEO + SaaS Architect + Sales + SRE                   |
+| Surcharge / burnout               | Wellbeing Officer → HR Director + PM + agent concerne      |
+| Conflit entre agents              | HR Director → agents concernes + CEO si escalade           |
+| Nouvel agent (onboarding)         | HR Director → PM + lead du departement                     |
+| Retrospective humaine             | Wellbeing Officer → tous les agents (score anonyme)        |
+| Positionnement / messaging        | Product Marketing → CPO + Sales + Competitive Intel        |
+| Communaute / ecosysteme           | Community Manager → BizDev + Content Strat + CPO           |
+| Tests E2E / automation            | QA Automation → QA Lead + Frontend Eng + DevOps            |
 
 ---
 
@@ -225,6 +246,8 @@
 | Conformite legale          | Legal & Compliance                      |
 | Tracking / analytics       | Growth Engineer                         |
 | Release / CI-CD            | DevOps Engineer, QA Lead                |
+| Bien-etre / surcharge      | Wellbeing Officer, HR Director           |
+| Culture / valeurs          | HR Director, CEO                         |
 
 ---
 
@@ -358,3 +381,8 @@ COUCHE 4 — VERIFICATION (Security Auditor)
 | 41 | [41-support-engineer.md](prompts/41-support-engineer.md) | Support Engineer | Tickets, troubleshooting, SLA, escalation |
 | 42 | [42-brand-designer.md](prompts/42-brand-designer.md) | Brand Designer | Identite visuelle, logo, brand book, premium |
 | 43 | [43-chat-engineer.md](prompts/43-chat-engineer.md) | Chat & Realtime Engineer | Architecture chat, streaming, multi-conversation, multi-user |
+| 44 | [44-hr-director.md](prompts/44-hr-director.md) | HR Director | Gestion talents, profiling DISC, communication, mediation, culture |
+| 45 | [45-wellbeing-officer.md](prompts/45-wellbeing-officer.md) | Wellbeing Officer | Bien-etre, prevention burnout, charge/capacite, reconnaissance |
+| 46 | [46-product-marketing-manager.md](prompts/46-product-marketing-manager.md) | Product Marketing Manager | Positionnement, messaging, case studies, battle cards, launch |
+| 47 | [47-community-manager.md](prompts/47-community-manager.md) | Community Manager | Ecosysteme Odoo, forums, reseaux sociaux, events, feedback users |
+| 48 | [48-qa-automation-engineer.md](prompts/48-qa-automation-engineer.md) | QA Automation Engineer | Tests E2E, integration API, eval LLM auto, CI quality gates |

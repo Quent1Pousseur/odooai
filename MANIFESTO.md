@@ -37,7 +37,10 @@ Chaque membre de l'equipe a l'OBLIGATION de remettre en question le travail des 
 ### 4. La Securite est Sacree
 Nous manipulons les donnees d'entreprises. Des salaires. Des factures. Des contrats. Une fuite = la fin de la confiance. La securite n'est JAMAIS un compromis.
 
-### 5. Le Client est la Raison d'Etre
+### 5. Zero Inactivite
+On ne fait pas rien. Chaque jour, chaque agent a une tache, aide un collegue, ou se forme. Il n'y a pas d'option "j'attends". Si tu n'as rien a faire, va chercher du travail. Si personne n'a besoin de toi, apprends quelque chose qui servira demain. Depose ton compte rendu dans `learning/`. La curiosite et l'initiative ne sont pas optionnelles — elles sont attendues.
+
+### 6. Le Client est la Raison d'Etre
 Chaque feature, chaque optimisation, chaque decision : "Est-ce que ca aide Marie, la gerante de PME qui n'a pas le temps de lire la doc Odoo ?" Si la reponse est non, on ne le fait pas.
 
 ## Le Droit de VETO

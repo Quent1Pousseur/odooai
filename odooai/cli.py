@@ -57,6 +57,8 @@ def main(argv: list[str] | None = None) -> None:
 
     # chat: interactive chat with OdooAI
     p_chat = sub.add_parser("chat", help="Chat with OdooAI (ask questions about Odoo)")
+    p_chat.add_argument("--url", default="", help="Odoo instance URL for live connection")
+    p_chat.add_argument("--db", default="", help="Odoo database name")
     p_chat.add_argument("--version-tag", default="17.0", help="Odoo version (default: 17.0)")
     p_chat.add_argument("--model", default="claude-sonnet-4-20250514", help="LLM model")
 
@@ -95,8 +97,21 @@ def _cmd_chat(args: argparse.Namespace) -> None:
         print("Error: ANTHROPIC_API_KEY not set in .env", file=sys.stderr)
         sys.exit(1)
 
+    # Optional live Odoo connection
+    odoo_client = None
+    odoo_uid = 0
+    odoo_api_key = ""
+    live_mode = bool(args.url and args.db)
+
+    if live_mode:
+        from odooai._cli_odoo import connect_odoo
+
+        odoo_client, odoo_uid, odoo_api_key = connect_odoo(args.url, args.db)
+
     print("=" * 60)
     print("  OdooAI — Votre Odoo peut faire plus.")
+    mode = "live" if live_mode else "BA Profiles"
+    print(f"  Mode : {mode}")
     print("=" * 60)
     print("\nPosez vos questions sur Odoo. Tapez 'quit' pour quitter.\n")
 
@@ -113,24 +128,26 @@ def _cmd_chat(args: argparse.Namespace) -> None:
             print("Au revoir !")
             break
 
-        # Show detected domain
         domain = detect_domain(question)
-        if domain:
-            print(f"[Domaine detecte : {DOMAIN_NAMES.get(domain, domain)}]")
-        else:
-            print("[Domaine : general]")
+        tag = DOMAIN_NAMES.get(domain, "general") if domain else "general"
+        live_tag = " | live" if live_mode else ""
+        print(f"[{tag}{live_tag}]")
 
-        # Get response
         try:
             response = asyncio.run(
-                handle_question(question, api_key, args.version_tag, args.model),
+                handle_question(
+                    question,
+                    api_key,
+                    args.version_tag,
+                    args.model,
+                    odoo_client=odoo_client,
+                    odoo_uid=odoo_uid,
+                    odoo_api_key=odoo_api_key,
+                ),
             )
-            print()
-            print(response.answer)
-            print(f"\n[Tokens: {response.tokens_used} | Sources: {', '.join(response.sources)}]")
-            print()
+            print(f"\n{response.answer}")
+            print(f"\n[Tokens: {response.tokens_used} | Sources: {', '.join(response.sources)}]\n")
         except Exception as exc:
-            # Never expose raw exception (could contain API key in traceback)
             err_type = type(exc).__name__
             print(f"\nErreur ({err_type}): impossible de generer la reponse.\n", file=sys.stderr)
 
@@ -192,16 +209,14 @@ def _cmd_analyze(args: argparse.Namespace) -> None:
     from odooai.knowledge.code_analyst.analyzer import analyze_module
     from odooai.knowledge.storage import save_module_kg
 
-    module_path = args.path.resolve()
-    if not module_path.is_dir():
-        print(f"Error: {module_path} is not a directory", file=sys.stderr)
+    path = args.path.resolve()
+    if not path.is_dir():
+        print(f"Error: {path} is not a directory", file=sys.stderr)
         sys.exit(1)
-
-    kg = analyze_module(module_path)
+    kg = analyze_module(path)
     if kg is None:
-        print(f"Error: could not parse {module_path} (no __manifest__.py?)", file=sys.stderr)
+        print(f"Error: could not parse {path}", file=sys.stderr)
         sys.exit(1)
-
     if args.output_json:
         print(kg.model_dump_json(indent=2))
         return
@@ -225,23 +240,16 @@ def _cmd_analyze_all(args: argparse.Namespace) -> None:
 
     index = analyze_version(version_path, args.version_tag)
 
-    print(f"Version:  {index.odoo_version}")
-    print(f"Modules:  {len(index.modules)}")
-    print(f"Models:   {index.total_models}")
-    print(f"Fields:   {index.total_fields}")
-
     failed = [m for m in index.modules if not m.success]
+    print(
+        f"v{index.odoo_version}: {len(index.modules)} modules, "
+        f"{index.total_models} models, {index.total_fields} fields, "
+        f"{len(failed)} failed"
+    )
     if failed:
-        print(f"\nFailed ({len(failed)}):")
         for m in failed:
-            print(f"  {m.technical_name}: {m.error}")
-
-    top = sorted(
-        [m for m in index.modules if m.success],
-        key=lambda m: m.model_count,
-        reverse=True,
-    )[:10]
-    print("\nTop 10 modules:")
+            print(f"  FAIL: {m.technical_name}: {m.error}")
+    top = sorted([m for m in index.modules if m.success], key=lambda m: -m.model_count)[:10]
     for m in top:
         print(f"  {m.technical_name}: {m.model_count} models, {m.field_count} fields")
 

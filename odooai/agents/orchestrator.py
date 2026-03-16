@@ -190,17 +190,23 @@ async def handle_question(
     anthropic_api_key: str,
     version: str = "17.0",
     model: str = "claude-sonnet-4-20250514",
+    odoo_client: Any | None = None,
+    odoo_uid: int = 0,
+    odoo_api_key: str = "",
 ) -> AgentResponse:
     """
     Handle a user question end-to-end.
 
-    Flow: detect domain → load BA Profile → call BA Agent → return response.
+    Flow: detect domain → load BA Profile → (optional: live Odoo data) → BA Agent.
 
     Args:
         question: User's question.
         anthropic_api_key: Anthropic API key.
         version: Odoo version for KG/BA lookup.
         model: LLM model.
+        odoo_client: Optional live OdooClient for instance queries.
+        odoo_uid: Odoo user ID (for live calls).
+        odoo_api_key: Odoo API key (for live calls).
 
     Returns:
         AgentResponse with answer.
@@ -209,7 +215,6 @@ async def handle_question(
     domain_id = detect_domain(question)
 
     if domain_id is None:
-        # Fallback: use sales_crm as default (most common)
         domain_id = "sales_crm"
         logger.info("No domain detected, defaulting to sales_crm", question=question[:100])
     else:
@@ -226,5 +231,17 @@ async def handle_question(
             domain=domain_id,
         )
 
-    # Step 3: Call BA Agent
-    return await ask_ba_agent(question, profile, anthropic_api_key, model)
+    # Step 3: Optional live Odoo data
+    odoo_context = ""
+    if odoo_client is not None and odoo_api_key:
+        from odooai.agents._live_context import fetch_live_context
+
+        odoo_context = await fetch_live_context(
+            odoo_client,
+            odoo_uid,
+            odoo_api_key,
+            domain_id,
+        )
+
+    # Step 4: Call BA Agent
+    return await ask_ba_agent(question, profile, anthropic_api_key, model, odoo_context)

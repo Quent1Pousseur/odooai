@@ -51,6 +51,7 @@ async def ask_ba_agent(
     profile: BAProfile,
     anthropic_api_key: str,
     model: str = "claude-sonnet-4-20250514",
+    odoo_context: str = "",
 ) -> AgentResponse:
     """
     Ask a question to the BA Agent with BA Profile context.
@@ -68,10 +69,18 @@ async def ask_ba_agent(
 
     context = _build_profile_context(profile)
 
+    live_section = ""
+    if odoo_context:
+        live_section = f"""
+
+Donnees LIVE de l'instance Odoo du client (anonymisees) :
+{odoo_context}
+"""
+
     user_message = f"""Contexte du domaine "{profile.domain_name}" :
 
 {context}
-
+{live_section}
 Question de l'utilisateur :
 {question}"""
 

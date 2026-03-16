@@ -116,6 +116,24 @@ def _normalize_domain(domain: Any) -> list[Any]:
     return normalized
 
 
+def _normalize_list(value: Any) -> list[str]:
+    """Normalize a value to a list of strings. LLM sometimes sends strings."""
+    if isinstance(value, list):
+        return [str(v) for v in value]
+    if isinstance(value, str):
+        try:
+            import ast
+
+            parsed = ast.literal_eval(value)
+            if isinstance(parsed, list):
+                return [str(v) for v in parsed]
+        except (ValueError, SyntaxError):
+            pass
+        # Comma-separated fallback
+        return [v.strip().strip("'\"") for v in value.split(",") if v.strip()]
+    return ["name"]
+
+
 async def execute_tool(
     tool_name: str,
     tool_input: dict[str, Any],
@@ -154,7 +172,7 @@ async def _exec_search_read(
     """Execute odoo_search_read with Guardian validation."""
     model = str(inp.get("model", ""))
     domain = _normalize_domain(inp.get("domain", []))
-    fields = inp.get("fields", ["name"])
+    fields = _normalize_list(inp.get("fields", ["name"]))
     limit = min(int(inp.get("limit", 10)), 20)  # Cap at 20
 
     # Guardian gates

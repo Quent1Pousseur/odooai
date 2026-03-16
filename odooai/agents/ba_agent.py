@@ -121,32 +121,34 @@ Question de l'utilisateur :
         else:
             break
 
-    # Extract text from final response — also check all messages for text
+    # Extract text from final response
     raw_text = ""
     for block in response.content:
         if hasattr(block, "text") and block.text:
             raw_text += block.text
 
-    # Fallback: if no text in final response, check previous assistant messages
-    if not raw_text:
-        for msg in reversed(messages):
-            if isinstance(msg.get("content"), list):
-                for block in msg["content"]:
-                    if hasattr(block, "text") and block.text:
-                        raw_text += block.text
-                if raw_text:
-                    break
-
-    # Last resort: if still empty, ask LLM to summarize without tools
-    if not raw_text and tool_calls_made > 0:
-        logger.warning("No text after tool calls, requesting summary")
+    # If the final response is just an intro ("Laissez-moi examiner...") or empty,
+    # and we made tool calls, force a summary response without tools
+    is_intro_only = len(raw_text) < 200 and tool_calls_made > 0
+    if (not raw_text or is_intro_only) and tool_calls_made > 0:
+        logger.info("Requesting final summary after tool calls", text_length=len(raw_text))
+        # Add current response to messages if it has content
+        if response.content:
+            messages.append({"role": "assistant", "content": response.content})
+        messages.append(
+            {
+                "role": "user",
+                "content": "Maintenant donne ta reponse complete basee sur les donnees trouvees.",
+            },
+        )
         summary_resp = client.messages.create(
             model=model,
-            max_tokens=2048,
+            max_tokens=4096,
             system=SYSTEM_PROMPT,
-            messages=[*messages, {"role": "user", "content": "Resume ta reponse en texte."}],  # type: ignore[list-item]
+            messages=messages,  # type: ignore[arg-type]
         )
         total_tokens += summary_resp.usage.input_tokens + summary_resp.usage.output_tokens
+        raw_text = ""
         for block in summary_resp.content:
             if hasattr(block, "text") and block.text:
                 raw_text += block.text

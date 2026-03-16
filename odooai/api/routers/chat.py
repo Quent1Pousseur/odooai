@@ -6,7 +6,6 @@ Dependencies: fastapi, agents/orchestrator
 
 from __future__ import annotations
 
-import asyncio
 import json
 from typing import Any
 
@@ -91,43 +90,33 @@ async def _stream_response(request: ChatRequest) -> Any:
     yield _sse_event({"type": "status", "content": "Recherche en cours..."})
 
     try:
-        from odooai.agents.orchestrator import detect_domain, handle_question
+        from odooai.agents._streaming import stream_ba_response
+        from odooai.agents.orchestrator import detect_domain, load_ba_profile
         from odooai.knowledge.ba_factory import DOMAIN_NAMES
 
         # Detect domain
-        domain = detect_domain(request.message)
-        domain_name = DOMAIN_NAMES.get(domain or "sales_crm", "general")
+        domain = detect_domain(request.message) or "sales_crm"
+        domain_name = DOMAIN_NAMES.get(domain, "general")
         yield _sse_event({"type": "domain", "content": domain_name})
 
-        # Get response (non-streaming for now — full streaming in Sprint 3)
-        response = await handle_question(
+        # Load BA Profile
+        profile = load_ba_profile(domain, request.version)
+        if profile is None:
+            yield _sse_event({"type": "error", "content": f"BA Profile '{domain}' non disponible."})
+            return
+
+        # Stream response token by token
+        async for event in stream_ba_response(
             request.message,
+            profile,
             api_key,
-            request.version,
             request.model,
             odoo_client=odoo_client,
             odoo_uid=odoo_uid,
             odoo_api_key=request.odoo_api_key,
             max_tools=request.max_tools,
-        )
-
-        # Stream the answer in chunks for progressive display
-        answer = response.answer
-        chunk_size = 20  # Characters per chunk
-        for i in range(0, len(answer), chunk_size):
-            chunk = answer[i : i + chunk_size]
-            yield _sse_event({"type": "text", "content": chunk})
-            await asyncio.sleep(0.02)  # Small delay for visual streaming
-
-        # Send metadata
-        yield _sse_event(
-            {
-                "type": "done",
-                "tokens": response.tokens_used,
-                "sources": response.sources,
-                "domain": response.domain,
-            }
-        )
+        ):
+            yield _sse_event(event)
 
     except Exception as exc:
         err_type = type(exc).__name__

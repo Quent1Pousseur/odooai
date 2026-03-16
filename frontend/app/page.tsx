@@ -66,6 +66,14 @@ export default function ChatPage() {
               setStreamingText(fullText);
             } else if (data.type === "domain") {
               domain = data.content;
+            } else if (data.type === "tool_start") {
+              fullText += `\n🔍 *Recherche dans Odoo (${data.tool})...*\n`;
+              setStreamingText(fullText);
+            } else if (data.type === "tool_end") {
+              // Tool finished, LLM will continue
+            } else if (data.type === "status") {
+              fullText += `\n_${data.content}_\n`;
+              setStreamingText(fullText);
             } else if (data.type === "done") {
               tokens = data.tokens || 0;
               sources = data.sources || [];

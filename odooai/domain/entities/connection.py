@@ -12,7 +12,7 @@ class OdooApiType(StrEnum):
     """Odoo API protocol type."""
 
     XML_RPC = "xml_rpc"
-    JSON_RPC = "json_rpc"
+    JSON2 = "json2"
 
 
 @dataclass

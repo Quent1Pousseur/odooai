@@ -25,9 +25,19 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: wire dependencies on startup, cleanup on shutdown."""
     settings = get_settings()
 
+    from odooai.domain.entities.connection import OdooApiType
+    from odooai.infrastructure.odoo._http import close_http_pool
+
     # Wire concrete implementations
+    # OdooClient needs a real Odoo connection — use placeholder in dev
+    odoo_client = OdooClient(
+        base_url=settings.odoo_url or "http://localhost:8069",
+        db=settings.odoo_db or "odoo",
+        api_type=OdooApiType.JSON2,
+    )
+
     wire(
-        odoo_client=OdooClient(),
+        odoo_client=odoo_client,
         cache=RedisClient(),
         llm_provider=AnthropicProvider(),
         crypto=AESCrypto(
@@ -38,7 +48,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
 
     yield
 
-    # Cleanup (future: close connection pools)
+    await close_http_pool()
 
 
 def create_app() -> FastAPI:

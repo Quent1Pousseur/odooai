@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     odoo_crypto_key: str = ""
     odoo_crypto_key_previous: str = ""
 
+    # Odoo
+    odoo_url: str = ""
+    odoo_db: str = ""
+
     # LLM
     anthropic_api_key: str = ""
 

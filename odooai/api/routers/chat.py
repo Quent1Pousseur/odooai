@@ -25,6 +25,7 @@ class ChatRequest(BaseModel):
     """Chat request from the frontend."""
 
     message: str
+    conversation_id: str = ""  # Empty = new conversation
     version: str = "17.0"
     model: str = "claude-sonnet-4-20250514"
     max_tools: int = 10
@@ -92,12 +93,42 @@ async def _stream_response(request: ChatRequest) -> Any:
     try:
         from odooai.agents._streaming import stream_ba_response
         from odooai.agents.orchestrator import detect_domain, load_ba_profile
+        from odooai.infrastructure.db.database import get_session
+        from odooai.infrastructure.db.models import Conversation, Message
         from odooai.knowledge.ba_factory import DOMAIN_NAMES
 
         # Detect domain
         domain = detect_domain(request.message) or "sales_crm"
         domain_name = DOMAIN_NAMES.get(domain, "general")
         yield _sse_event({"type": "domain", "content": domain_name})
+
+        # Get or create conversation
+        conversation_id = request.conversation_id
+        try:
+            async for session in get_session():
+                if not conversation_id:
+                    conv = Conversation(
+                        title=request.message[:100],
+                        domain_id=domain,
+                    )
+                    session.add(conv)
+                    await session.commit()
+                    await session.refresh(conv)
+                    conversation_id = str(conv.id)
+
+                # Save user message
+                user_msg = Message(
+                    conversation_id=conversation_id,
+                    role="user",
+                    content=request.message,
+                )
+                session.add(user_msg)
+                await session.commit()
+                break
+        except Exception:
+            pass  # DB optional — continue without persistence
+
+        yield _sse_event({"type": "conversation_id", "content": conversation_id})
 
         # Load BA Profile
         profile = load_ba_profile(domain, request.version)
@@ -106,6 +137,8 @@ async def _stream_response(request: ChatRequest) -> Any:
             return
 
         # Stream response token by token
+        full_response = ""
+        total_tokens = 0
         async for event in stream_ba_response(
             request.message,
             profile,
@@ -117,6 +150,26 @@ async def _stream_response(request: ChatRequest) -> Any:
             max_tools=request.max_tools,
         ):
             yield _sse_event(event)
+            if event.get("type") == "text":
+                full_response += event.get("content", "")
+            if event.get("type") == "done":
+                total_tokens = event.get("tokens", 0)
+
+        # Save assistant message
+        try:
+            async for session in get_session():
+                if conversation_id and full_response:
+                    assistant_msg = Message(
+                        conversation_id=conversation_id,
+                        role="assistant",
+                        content=full_response,
+                        tokens=total_tokens,
+                    )
+                    session.add(assistant_msg)
+                    await session.commit()
+                break
+        except Exception:
+            pass  # DB optional
 
     except Exception as exc:
         err_type = type(exc).__name__

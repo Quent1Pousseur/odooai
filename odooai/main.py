@@ -14,6 +14,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from odooai.api.dependencies import wire
 from odooai.api.middleware import request_id_middleware
 from odooai.api.routers.chat import router as chat_router
+from odooai.api.routers.conversations import router as conversations_router
 from odooai.api.routers.health import router as health_router
 from odooai.config import get_settings
 from odooai.domain.entities.connection import OdooApiType
@@ -38,6 +39,11 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     # Fail-fast in production if config is incomplete
     if settings.is_production:
         settings.validate_production()
+
+    # Initialize database
+    from odooai.infrastructure.db.database import close_db, init_db
+
+    await init_db()
 
     # Wire concrete implementations
     odoo_client = OdooClient(
@@ -70,6 +76,7 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
     await close_http_pool()
+    await close_db()
     logger.info("OdooAI shutdown complete")
 
 
@@ -94,6 +101,7 @@ def create_app() -> FastAPI:
     application.add_middleware(BaseHTTPMiddleware, dispatch=request_id_middleware)
     application.include_router(health_router)
     application.include_router(chat_router)
+    application.include_router(conversations_router)
 
     return application
 

@@ -1,0 +1,48 @@
+"""
+Module: infrastructure/db/models.py
+Role: SQLAlchemy models for persistent storage.
+Dependencies: sqlalchemy
+"""
+
+from __future__ import annotations
+
+import uuid
+from datetime import UTC, datetime
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+
+class Base(DeclarativeBase):
+    """SQLAlchemy declarative base."""
+
+
+class Conversation(Base):
+    """A chat conversation."""
+
+    __tablename__ = "conversations"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    title: Mapped[str] = mapped_column(String(200), default="Nouvelle conversation")
+    domain_id: Mapped[str] = mapped_column(String(50), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+
+    messages: Mapped[list[Message]] = relationship(
+        back_populates="conversation", order_by="Message.created_at"
+    )
+
+
+class Message(Base):
+    """A single message in a conversation."""
+
+    __tablename__ = "messages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    conversation_id: Mapped[str] = mapped_column(String(36), ForeignKey("conversations.id"))
+    role: Mapped[str] = mapped_column(String(20))
+    content: Mapped[str] = mapped_column(Text)
+    tokens: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+
+    conversation: Mapped[Conversation] = relationship(back_populates="messages")

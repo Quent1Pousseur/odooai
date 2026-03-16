@@ -55,6 +55,11 @@ def main(argv: list[str] | None = None) -> None:
     p_ba.add_argument("--model", default="claude-sonnet-4-20250514", help="LLM model")
     p_ba.add_argument("--save", action="store_true", help="Save BA Profile to knowledge_store/")
 
+    # chat: interactive chat with OdooAI
+    p_chat = sub.add_parser("chat", help="Chat with OdooAI (ask questions about Odoo)")
+    p_chat.add_argument("--version-tag", default="17.0", help="Odoo version (default: 17.0)")
+    p_chat.add_argument("--model", default="claude-sonnet-4-20250514", help="LLM model")
+
     # serve: run the API server
     sub.add_parser("serve", help="Run the OdooAI API server")
 
@@ -66,12 +71,68 @@ def main(argv: list[str] | None = None) -> None:
         _cmd_analyze_all(args)
     elif args.command == "generate-ba":
         _cmd_generate_ba(args)
+    elif args.command == "chat":
+        _cmd_chat(args)
     elif args.command == "check-kg":
         _cmd_check_kg(args)
     elif args.command == "serve":
         _cmd_serve()
     else:
         parser.print_help()
+
+
+def _cmd_chat(args: argparse.Namespace) -> None:
+    """Interactive chat with OdooAI."""
+    import asyncio
+
+    from odooai.agents.orchestrator import detect_domain, handle_question
+    from odooai.config import get_settings
+    from odooai.knowledge.ba_factory import DOMAIN_NAMES
+
+    settings = get_settings()
+    api_key = settings.anthropic_api_key
+    if not api_key:
+        print("Error: ANTHROPIC_API_KEY not set in .env", file=sys.stderr)
+        sys.exit(1)
+
+    print("=" * 60)
+    print("  OdooAI — Votre Odoo peut faire plus.")
+    print("=" * 60)
+    print("\nPosez vos questions sur Odoo. Tapez 'quit' pour quitter.\n")
+
+    while True:
+        try:
+            question = input("Vous > ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nAu revoir !")
+            break
+
+        if not question:
+            continue
+        if question.lower() in ("quit", "exit", "q"):
+            print("Au revoir !")
+            break
+
+        # Show detected domain
+        domain = detect_domain(question)
+        if domain:
+            print(f"[Domaine detecte : {DOMAIN_NAMES.get(domain, domain)}]")
+        else:
+            print("[Domaine : general]")
+
+        # Get response
+        try:
+            response = asyncio.run(
+                handle_question(question, api_key, args.version_tag, args.model),
+            )
+            print()
+            print(response.answer)
+            print(f"\n[Tokens: {response.tokens_used} | Sources: {', '.join(response.sources)}]")
+            print()
+        except Exception as exc:
+            # Never expose raw exception (could contain API key in traceback)
+            err_type = type(exc).__name__
+            print(f"\nErreur ({err_type}): impossible de generer la reponse.\n", file=sys.stderr)
 
 
 def _cmd_generate_ba(args: argparse.Namespace) -> None:
@@ -83,8 +144,7 @@ def _cmd_generate_ba(args: argparse.Namespace) -> None:
     from odooai.knowledge.storage import load_module_kg
 
     if args.domain not in DOMAINS:
-        print(f"Unknown domain: {args.domain}", file=sys.stderr)
-        print(f"Available: {list(DOMAINS.keys())}")
+        print(f"Unknown domain: {args.domain}. Available: {list(DOMAINS.keys())}", file=sys.stderr)
         sys.exit(1)
 
     settings = get_settings()
@@ -111,21 +171,11 @@ def _cmd_generate_ba(args: argparse.Namespace) -> None:
         generate_ba_profile(args.domain, kgs, api_key, model=args.model),
     )
 
-    print(f"\n{'=' * 60}")
-    print(f"BA Profile: {profile.domain_name}")
-    print(f"{'=' * 60}")
-    print(f"\n{profile.summary}")
-    print(f"\nCapabilities ({len(profile.capabilities)}):")
-    for c in profile.capabilities:
-        print(f"  - {c.name}: {c.description[:80]}...")
-    print(f"\nFeature Discoveries ({len(profile.feature_discoveries)}):")
-    for f in profile.feature_discoveries:
-        print(f"  - {f.name} ({f.complexity})")
-        print(f"    {f.business_value[:80]}")
-    print(f"\nGotchas ({len(profile.gotchas)}):")
-    for g in profile.gotchas:
-        print(f"  - {g.description[:80]}")
-    print(f"\nTokens used: {profile.token_count}")
+    print(f"\nBA Profile: {profile.domain_name} | {profile.summary[:100]}")
+    print(
+        f"Capabilities: {len(profile.capabilities)} | Features: {len(profile.feature_discoveries)}"
+    )
+    print(f"Gotchas: {len(profile.gotchas)} | Tokens: {profile.token_count}")
 
     if args.save:
         from pathlib import Path

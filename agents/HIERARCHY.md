@@ -65,6 +65,7 @@ FONDATEUR (00) — Autorite supreme, decideur final
 | 20 Junior Backend Dev | Senior Backend Dev | — | Senior Backend Dev |
 | 21 Frontend Engineer | CPO + Backend Architect | — | CPO (UX), Backend Arch (API) |
 | 39 Mobile Engineer | CPO + Backend Architect | — | CPO (UX), Backend Arch (API) |
+| 43 Chat & Realtime Engineer | CTO | — | Backend Arch (API), Frontend Eng (UI) |
 | 35 Integration Engineer | Backend Architect | — | Backend Architect, Security Arch |
 
 ### ENGINEERING — AI & Data

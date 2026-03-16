@@ -357,3 +357,4 @@ COUCHE 4 — VERIFICATION (Security Auditor)
 | 40 | [40-vendor-manager.md](prompts/40-vendor-manager.md) | Vendor Manager | Fournisseurs, negociation, plan B, FinOps |
 | 41 | [41-support-engineer.md](prompts/41-support-engineer.md) | Support Engineer | Tickets, troubleshooting, SLA, escalation |
 | 42 | [42-brand-designer.md](prompts/42-brand-designer.md) | Brand Designer | Identite visuelle, logo, brand book, premium |
+| 43 | [43-chat-engineer.md](prompts/43-chat-engineer.md) | Chat & Realtime Engineer | Architecture chat, streaming, multi-conversation, multi-user |

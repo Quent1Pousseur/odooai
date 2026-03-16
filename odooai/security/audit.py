@@ -1,16 +1,17 @@
 """
 Module: security/audit.py
 Role: Audit log writer for all data operations.
-      Stub for Sprint 1 — full implementation with DB persistence in SEC-001.
-Dependencies: structlog (future)
+      Uses structlog for structured output. DB persistence in Phase 2.
+Dependencies: structlog
 """
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
-logger = logging.getLogger(__name__)
+import structlog
+
+logger = structlog.get_logger("odooai.audit")
 
 
 def log_access(
@@ -28,13 +29,38 @@ def log_access(
         operation: Operation type (search_read, create, write, execute).
         uid: Odoo user ID performing the operation.
         record_ids: IDs of records affected (if applicable).
-        metadata: Additional context for the audit log.
+        metadata: Additional context (category, anonymized, etc.).
     """
     logger.info(
-        "audit: %s on %s by uid=%d ids=%s",
-        operation,
-        model,
-        uid,
-        record_ids or [],
-        extra=metadata or {},
+        "data_access",
+        model=model,
+        operation=operation,
+        uid=uid,
+        record_ids=record_ids or [],
+        record_count=len(record_ids) if record_ids else 0,
+        **(metadata or {}),
+    )
+
+
+def log_blocked(
+    model: str,
+    method: str,
+    uid: int,
+    reason: str,
+) -> None:
+    """
+    Log a blocked access attempt.
+
+    Args:
+        model: Odoo model that was targeted.
+        method: Method that was attempted.
+        uid: Odoo user ID that attempted the access.
+        reason: Why the access was blocked.
+    """
+    logger.warning(
+        "access_blocked",
+        model=model,
+        method=method,
+        uid=uid,
+        reason=reason,
     )

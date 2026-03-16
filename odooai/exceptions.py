@@ -69,6 +69,10 @@ class SecurityError(OdooAIError):
     """Anonymization, encryption, or audit failure."""
 
 
+class DomainInjectionError(OdooAIError):
+    """Odoo domain filter contains invalid or suspicious syntax."""
+
+
 # ============================================================
 # LLM
 # ============================================================

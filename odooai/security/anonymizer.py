@@ -91,3 +91,73 @@ def redact(_value: object) -> str:
         The string '[REDACTED]'.
     """
     return "[REDACTED]"
+
+
+# ──────────────────────────────────────────────────────────────
+# Field-name-based anonymization rules for SENSITIVE models
+# ──────────────────────────────────────────────────────────────
+
+# Patterns: if field name contains any of these substrings, apply the method.
+_AMOUNT_PATTERNS = ("amount", "price", "cost", "total", "salary", "wage", "balance")
+_EMAIL_PATTERNS = ("email",)
+_PHONE_PATTERNS = ("phone", "mobile", "fax")
+_NAME_PATTERNS_HR = ("name",)  # Only on HR models
+
+
+def anonymize_field_value(
+    field_name: str,
+    value: object,
+    model: str = "",
+) -> object:
+    """
+    Anonymize a single field value based on field name patterns.
+
+    Args:
+        field_name: Odoo field name.
+        value: Raw field value.
+        model: Odoo model name (used for HR-specific rules).
+
+    Returns:
+        Anonymized value, or original if no rule matches.
+    """
+    lower = field_name.lower()
+
+    if any(p in lower for p in _AMOUNT_PATTERNS):
+        if isinstance(value, (int, float)):
+            return round_amount(float(value))
+        return value
+
+    if any(p in lower for p in _EMAIL_PATTERNS):
+        if isinstance(value, str):
+            return mask_email(value)
+        return value
+
+    if any(p in lower for p in _PHONE_PATTERNS):
+        if isinstance(value, str):
+            return mask_phone(value)
+        return value
+
+    # Mask names only on HR models (employee names are sensitive)
+    if model.startswith("hr.") and any(p in lower for p in _NAME_PATTERNS_HR):
+        if isinstance(value, str):
+            return mask_name(value)
+        return value
+
+    return value
+
+
+def anonymize_record(
+    record: dict[str, object],
+    model: str,
+) -> dict[str, object]:
+    """
+    Anonymize all sensitive fields in a single Odoo record.
+
+    Args:
+        record: Raw Odoo record dict.
+        model: Odoo model name.
+
+    Returns:
+        New dict with sensitive fields anonymized.
+    """
+    return {field: anonymize_field_value(field, value, model) for field, value in record.items()}

@@ -61,6 +61,9 @@ def main(argv: list[str] | None = None) -> None:
     p_chat.add_argument("--db", default="", help="Odoo database name")
     p_chat.add_argument("--version-tag", default="17.0", help="Odoo version (default: 17.0)")
     p_chat.add_argument("--model", default="claude-sonnet-4-20250514", help="LLM model")
+    p_chat.add_argument(
+        "--max-tools", type=int, default=10, help="Max tool calls per question (default: 10)"
+    )
 
     # serve: run the API server
     sub.add_parser("serve", help="Run the OdooAI API server")
@@ -143,6 +146,7 @@ def _cmd_chat(args: argparse.Namespace) -> None:
                     odoo_client=odoo_client,
                     odoo_uid=odoo_uid,
                     odoo_api_key=odoo_api_key,
+                    max_tools=args.max_tools,
                 ),
             )
             print(f"\n{response.answer}")

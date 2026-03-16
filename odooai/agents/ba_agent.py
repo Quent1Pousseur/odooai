@@ -54,6 +54,7 @@ async def ask_ba_agent(
     odoo_client: Any | None = None,
     odoo_uid: int = 0,
     odoo_api_key: str = "",
+    max_tools: int = 10,
 ) -> AgentResponse:
     """
     Ask a question with BA Profile context + optional tool-use for live data.
@@ -62,7 +63,7 @@ async def ask_ba_agent(
     """
     import anthropic
 
-    from odooai.agents._tools import MAX_TOOL_CALLS, TOOL_DEFINITIONS, execute_tool
+    from odooai.agents._tools import TOOL_DEFINITIONS, execute_tool
 
     context = _build_profile_context(profile)
     user_message = f"""Contexte du domaine "{profile.domain_name}" :
@@ -80,10 +81,10 @@ Question de l'utilisateur :
     messages: list[dict[str, Any]] = [{"role": "user", "content": user_message}]
     total_tokens = 0
 
-    # Tool-use loop (max MAX_TOOL_CALLS iterations)
+    # Tool-use loop
     tool_calls_made = 0
-    for _i in range(MAX_TOOL_CALLS + 1):
-        use_tools = tools if tools and tool_calls_made < MAX_TOOL_CALLS else []
+    for _i in range(max_tools + 1):
+        use_tools = tools if tools and tool_calls_made < max_tools else []
 
         # Retry on overloaded errors
         response = _call_with_retry(

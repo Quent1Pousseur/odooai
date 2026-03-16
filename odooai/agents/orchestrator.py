@@ -193,6 +193,7 @@ async def handle_question(
     odoo_client: Any | None = None,
     odoo_uid: int = 0,
     odoo_api_key: str = "",
+    max_tools: int = 10,
 ) -> AgentResponse:
     """
     Handle a user question end-to-end.
@@ -240,4 +241,5 @@ async def handle_question(
         odoo_client=odoo_client,
         odoo_uid=odoo_uid,
         odoo_api_key=odoo_api_key,
+        max_tools=max_tools,
     )

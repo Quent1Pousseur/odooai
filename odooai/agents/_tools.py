@@ -17,7 +17,7 @@ from odooai.domain.ports.i_odoo_client import IOdooClient
 logger = structlog.get_logger(__name__)
 
 # Max tool calls per question to prevent infinite loops and cost blowup
-MAX_TOOL_CALLS = 3
+MAX_TOOL_CALLS = 10
 
 # Tools exposed to the LLM
 TOOL_DEFINITIONS: list[dict[str, Any]] = [

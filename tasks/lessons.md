@@ -52,3 +52,9 @@
 **Erreur** : Pas de cadrage collectif = pas de visibilite sur les risques et les engagements.
 **Fix** : Kick-off Sprint 1 formel avec tous les agents, VETOs identifies, risques documentes.
 **Regle** : Chaque phase et chaque sprint commence par un kick-off. C'est ajoute dans WORKFLOW.md.
+
+### [2026-03-17] Les meetings ne sont PAS optionnels
+**Contexte** : Le fondateur a du rappeler 3 fois que les meetings etaient oublies.
+**Erreur** : L'empressement de coder fait sauter les meetings. On perd le cadrage, les challenges, et les decisions collectives.
+**Fix** : Regle absolue ajoutee au workflow.
+**Regle** : Jamais de code sans daily avant. Jamais de fin de session sans daily apres. Non-negociable.

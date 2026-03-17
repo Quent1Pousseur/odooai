@@ -96,7 +96,7 @@ function AnimatedBar({ value, max, color }: { value: number; max: number; color?
 
 export function DashboardArtifact({ data }: { data: DashboardData }) {
   return (
-    <div className="my-3 rounded-xl border border-gray-200 overflow-hidden animate-fadeIn">
+    <div className="my-3 rounded-xl border border-gray-200 overflow-hidden animate-fadeIn w-full max-w-full">
       {/* Header */}
       {data.title && (
         <div className="bg-gradient-to-r from-primary to-primary-600 px-4 py-3">
@@ -116,13 +116,13 @@ export function DashboardArtifact({ data }: { data: DashboardData }) {
               return (
                 <div
                   key={i}
-                  className={`rounded-lg border p-3 ${colorClass} animate-fadeIn`}
+                  className={`rounded-lg border p-3 ${colorClass} animate-fadeIn overflow-hidden min-w-0`}
                   style={{ animationDelay: `${i * 100}ms` }}
                 >
-                  <div className="flex items-center justify-between">
-                    {kpi.icon && <span className="text-lg">{kpi.icon}</span>}
+                  <div className="flex items-center justify-between gap-1">
+                    {kpi.icon && <span className="text-base flex-shrink-0">{kpi.icon}</span>}
                     {kpi.trend && (
-                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                      <span className={`text-[9px] font-medium px-1 py-0.5 rounded-full flex-shrink-0 ${
                         kpi.trend.startsWith("+") ? "bg-green-100 text-green-700" :
                         kpi.trend.startsWith("-") ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"
                       }`}>
@@ -130,10 +130,10 @@ export function DashboardArtifact({ data }: { data: DashboardData }) {
                       </span>
                     )}
                   </div>
-                  <p className="text-xl font-bold mt-1">
+                  <p className="text-lg font-bold mt-1 truncate">
                     <AnimatedNumber value={kpi.value} format={kpi.format} />
                   </p>
-                  <p className="text-xs font-medium opacity-70 mt-0.5">{kpi.label}</p>
+                  <p className="text-[11px] font-medium opacity-70 mt-0.5 truncate">{kpi.label}</p>
                 </div>
               );
             })}
@@ -159,9 +159,9 @@ export function DashboardArtifact({ data }: { data: DashboardData }) {
         {data.alerts && data.alerts.length > 0 && (
           <div className="space-y-1.5">
             {data.alerts.map((alert, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-lg">
-                <span>⚠️</span>
-                <span>{alert}</span>
+              <div key={i} className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 px-3 py-2 rounded-lg">
+                <span className="flex-shrink-0">⚠️</span>
+                <span className="break-words min-w-0">{alert}</span>
               </div>
             ))}
           </div>

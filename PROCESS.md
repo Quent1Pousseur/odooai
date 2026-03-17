@@ -61,26 +61,38 @@ Tout le monde le lit. Personne n'y deroge.
 | Comment le projet fonctionne | **PROCESS.md** (ce fichier) |
 | Vision et principes | MANIFESTO.md |
 | Stack technique et conventions | CLAUDE.md |
-| Structure de l'equipe | agents/TEAM.md |
-| Hierarchie | agents/HIERARCHY.md |
 | Workflow (specs, git, PRs) | WORKFLOW.md |
-| Roadmap et phases | roadmap/ROADMAP.md |
-| Risques | risks/RISK_REGISTER.md |
-| Budget et couts | budget/budget-tracker.md |
-| KPIs individuels | hr/kpis-individuels.md |
-| Lecons apprises | lessons/lessons.md |
-| Wellbeing et RH | hr/ |
-| Learning reports | learning/sprintN/ |
-| Specs techniques | specs/ |
-| Reviews | reviews/ |
-| Decisions architecture | decisions/ |
-| Meetings | meetings/ (daily, weekly, retro, kickoff, team-building, hr) |
-| Incidents | incidents/ |
+| Structure de l'equipe | agents/TEAM.md + agents/HIERARCHY.md |
 | Code source backend | odooai/ |
 | Code source frontend | frontend/ |
 | Tests | tests/ |
-| Documentation technique | docs/ |
-| Business et marketing | business/ |
+| Specs techniques | specs/ |
+| Reviews | reviews/ |
+| **Governance** | |
+| Roadmap et phases | docs/governance/ROADMAP.md |
+| Risques | docs/governance/RISK_REGISTER.md |
+| Budget et couts | docs/governance/budget-tracker.md |
+| Lecons apprises | docs/governance/lessons.md |
+| **RH** | |
+| KPIs individuels | docs/hr/kpis-individuels.md |
+| Cellule R&D | docs/hr/cellule-rnd.md |
+| Zero inactivite | docs/hr/regle-zero-inactivite.md |
+| Daily template | docs/hr/daily-checklist-template.md |
+| Wellbeing | docs/hr/sondage-wellbeing-001.md |
+| **Business** | |
+| FAQ, guide, KB | docs/business/ |
+| Marketing | docs/business/marketing/ |
+| Legal (CGU, LGPL, DPA) | docs/business/legal/ |
+| Competitive analysis | docs/business/competitive-analysis.md |
+| **Technique** | |
+| Backup/DR | docs/technical/backup-dr-plan.md |
+| Eval framework | docs/technical/eval-framework-v1.md |
+| Game day | docs/technical/game-day-1.md |
+| OpenAPI | docs/technical/openapi.json |
+| **Autres** | |
+| Learning reports | learning/sprintN/ |
+| Projets R&D | rnd/ |
+| Meetings | meetings/ (daily, weekly, retro, kickoff, team-building, hr, archive) |
 | Scripts | scripts/ |
 
 ---

@@ -80,7 +80,7 @@ make run             # uvicorn dev server :8000
 - **CHALLENGES ACTIFS** : les agents DOIVENT se challenger dans les meetings. Pas de consensus mou.
 - **R&D OU LEARNING SI PAS DE TACHE** : tout agent sans tache avance un projet R&D (rnd/) ou produit un CR de formation (learning/). R&D > formation si le projet existe. Voir hr/cellule-rnd.md.
 - **VERIFICATION CRs BLOQUANTE** : a chaque daily matin, Section 0 du template = verifier que les CRs de la session precedente existent. Si un CR manque, l'agent le produit AVANT toute discussion. J'ai ete rappele 5 FOIS — c'est fini.
-- **KPIs MESURABLES** : chaque agent a des KPIs dans hr/kpis-individuels.md. Verifies a chaque retro. Pas de KPI = pas de mesure = pas de progres.
-- **WEEKLY RECAP** : chaque vendredi, le PM + CEO font un weekly dans meetings/weekly/. Budget, KPIs, risques, plan. Template : meetings/weekly/template.md.
-- **BUDGET TRACKER** : le CFO met a jour budget/budget-tracker.md chaque semaine. Couts LLM + infra + outils.
+- **KPIs MESURABLES** : chaque agent a des KPIs dans docs/hr/kpis-individuels.md. Verifies a chaque retro.
+- **WEEKLY RECAP** : chaque vendredi, weekly dans meetings/weekly/. Template : meetings/weekly/template.md.
+- **BUDGET TRACKER** : le CFO met a jour docs/governance/budget-tracker.md chaque semaine.
 - **PROCESS.md** : le document central. TOUT le monde le lit. Si un process n'est pas dans PROCESS.md, il n'existe pas.

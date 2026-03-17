@@ -477,13 +477,13 @@ async def _exec_schema(
         attrs = ["string", "type", "required"]
         if mode == "detailed":
             attrs.extend(["readonly", "selection", "relation"])
-        raw = await client.execute(
+        raw = await client.execute_kw(
             api_key,
             model,
             "fields_get",
             [],
-            uid=uid,
             kwargs={"attributes": attrs},
+            uid=uid,
         )
     except Exception as exc:
         error_str = str(exc)
@@ -558,52 +558,14 @@ async def _exec_execute(
     guarded_odoo_write_check(model, method)
 
     try:
-        # Adapt args based on method
-        if method == "create":
-            # create expects: execute(model, "create", [], kwargs={vals: {...}})
-            vals = raw_args[0] if raw_args else {}
-            result = await client.execute(
-                api_key,
-                model,
-                method,
-                [],
-                uid=uid,
-                kwargs={"vals": vals},
-            )
-        elif method == "write":
-            # write expects: execute(model, "write", [ids], kwargs={vals: {...}})
-            ids = raw_args[0] if raw_args and isinstance(raw_args[0], list) else []
-            vals = raw_args[1] if len(raw_args) > 1 else {}
-            result = await client.execute(
-                api_key,
-                model,
-                method,
-                ids,
-                uid=uid,
-                kwargs={"vals": vals},
-            )
-        elif method == "copy":
-            # copy expects: execute(model, "copy", [id])
-            ids = raw_args[0] if raw_args and isinstance(raw_args[0], list) else raw_args[:1]
-            result = await client.execute(
-                api_key,
-                model,
-                method,
-                ids,
-                uid=uid,
-            )
-        else:
-            # Workflow methods: execute(model, "action_confirm", [id])
-            ids = raw_args[0] if raw_args and isinstance(raw_args[0], list) else raw_args
-            if not isinstance(ids, list):
-                ids = [ids] if ids else []
-            result = await client.execute(
-                api_key,
-                model,
-                method,
-                ids,
-                uid=uid,
-            )
+        # Pass args DIRECTLY to Odoo — no transformation
+        result = await client.execute_kw(
+            api_key,
+            model,
+            method,
+            raw_args,
+            uid=uid,
+        )
         logger.info("Execute OK", model=model, method=method)
 
         # Format result based on method

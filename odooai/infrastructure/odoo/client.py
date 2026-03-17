@@ -201,7 +201,7 @@ class OdooClient(IOdooClient):
         uid: int = 0,
         kwargs: dict[str, Any] | None = None,
     ) -> Any:
-        """Execute a model method."""
+        """Execute a model method (legacy — uses res_ids)."""
         return await self._call(
             api_key,
             uid,
@@ -210,6 +210,26 @@ class OdooClient(IOdooClient):
             args=[res_ids],
             kwargs=kwargs or {},
             json2_body={"ids": res_ids, **(kwargs or {})},
+        )
+
+    async def execute_kw(
+        self,
+        api_key: str,
+        model: str,
+        method: str,
+        args: list[Any],
+        kwargs: dict[str, Any] | None = None,
+        uid: int = 0,
+    ) -> Any:
+        """Execute any Odoo method with generic args — matches XML-RPC execute_kw."""
+        return await self._call(
+            api_key,
+            uid,
+            model,
+            method,
+            args=args,
+            kwargs=kwargs or {},
+            json2_body={"args": args, **(kwargs or {})},
         )
 
     async def get_model_fields(

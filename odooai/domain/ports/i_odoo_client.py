@@ -110,6 +110,18 @@ class IOdooClient(ABC):
         """Execute a model method (e.g. action_confirm)."""
 
     @abstractmethod
+    async def execute_kw(
+        self,
+        api_key: str,
+        model: str,
+        method: str,
+        args: list[Any],
+        kwargs: dict[str, Any] | None = None,
+        uid: int = 0,
+    ) -> Any:
+        """Execute any Odoo method with generic args — matches XML-RPC."""
+
+    @abstractmethod
     async def get_model_fields(
         self,
         api_key: str,

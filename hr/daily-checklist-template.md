@@ -18,7 +18,7 @@
 
 | # | Agent | Activite du jour | Type |
 |---|-------|-----------------|------|
-| 01 | CEO | [activite] | tache / aide / formation |
+| 01 | CEO | [activite] | tache / aide / R&D / formation |
 | 02 | CTO | [activite] | tache / aide / formation |
 | 03 | CPO | [activite] | tache / aide / formation |
 | 04 | PM | [activite] | tache / aide / formation |

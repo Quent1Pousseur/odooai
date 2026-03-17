@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Read(//Users/quentinpousseur/prodooctivity/**)",
-      "Read(//Users/quentinpousseur/.claude/**)"
+      "Read(//Users/quentinpousseur/.claude/**)",
+      "Bash(find /Users/quentinpousseur/mcp/learning -type f -exec ls -lh {})"
     ]
   }
 }

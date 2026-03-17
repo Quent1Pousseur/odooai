@@ -78,7 +78,7 @@ make run             # uvicorn dev server :8000
 - **SPECS AVANT CODE** : RIEN ne se code sans spec ODAI-XXX ecrite et committee.
 - **REVIEWS DOCUMENTEES** : chaque review interne est sauvegardee dans reviews/. Le fondateur doit pouvoir les lire.
 - **CHALLENGES ACTIFS** : les agents DOIVENT se challenger dans les meetings. Pas de consensus mou.
-- **LEARNING SI PAS DE TACHE** : tout agent sans tache produit un CR de formation dans learning/ le jour meme.
+- **R&D OU LEARNING SI PAS DE TACHE** : tout agent sans tache avance un projet R&D (rnd/) ou produit un CR de formation (learning/). R&D > formation si le projet existe. Voir hr/cellule-rnd.md.
 - **VERIFICATION CRs BLOQUANTE** : a chaque daily matin, Section 0 du template = verifier que les CRs de la session precedente existent. Si un CR manque, l'agent le produit AVANT toute discussion. J'ai ete rappele 5 FOIS — c'est fini.
 - **KPIs MESURABLES** : chaque agent a des KPIs dans hr/kpis-individuels.md. Verifies a chaque retro. Pas de KPI = pas de mesure = pas de progres.
 - **WEEKLY RECAP** : chaque vendredi, le PM + CEO font un weekly dans meetings/weekly/. Budget, KPIs, risques, plan. Template : meetings/weekly/template.md.

@@ -343,6 +343,25 @@ async def execute_tool(
         return f"Erreur: {user_msg[:200]}"
 
 
+def _normalize_records(records: list[dict[str, Any]] | tuple[dict[str, Any], ...]) -> list[dict[str, Any]]:
+    """Normalize Odoo records for clean LLM consumption.
+
+    Converts Many2one [id, "name"] → {"id": id, "name": "name"}
+    so the LLM can easily extract IDs for create/write operations.
+    """
+    clean: list[dict[str, Any]] = []
+    for record in records:
+        normalized: dict[str, Any] = {}
+        for key, value in record.items():
+            if isinstance(value, list) and len(value) == 2 and isinstance(value[0], int):
+                # Many2one: [42, "Partner Name"] → {"id": 42, "name": "Partner Name"}
+                normalized[key] = {"id": value[0], "name": value[1]}
+            else:
+                normalized[key] = value
+        clean.append(normalized)
+    return clean
+
+
 async def _exec_search_read(
     inp: dict[str, Any],
     client: IOdooClient,
@@ -364,13 +383,15 @@ async def _exec_search_read(
     # Sanitize
     result = guarded_odoo_read(model, raw, fields, uid=uid)
 
-    # Format for LLM — return JSON for clean parsing
+    # Format for LLM — return clean JSON
     import json
 
     if not result.records:
         return f"No records found for {model} with this filter."
 
-    return json.dumps(result.records, ensure_ascii=False, default=str)
+    # Normalize Many2one: [id, "name"] → {"id": id, "name": "name"}
+    clean = _normalize_records(result.records)
+    return json.dumps(clean, ensure_ascii=False, default=str)
 
 
 async def _exec_search_count(

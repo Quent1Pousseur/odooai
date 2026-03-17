@@ -59,55 +59,74 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
               <ReactMarkdown
                 components={{
                   h1: ({ children }) => (
-                    <h3 className="text-[15px] font-semibold text-text mt-3 mb-1.5 first:mt-0">{children}</h3>
+                    <h1 className="text-base font-bold text-text mt-4 mb-2 first:mt-0">{children}</h1>
                   ),
                   h2: ({ children }) => (
-                    <h3 className="text-[15px] font-semibold text-text mt-3 mb-1.5 first:mt-0">{children}</h3>
+                    <h2 className="text-[15px] font-bold text-text mt-4 mb-2 first:mt-0">{children}</h2>
                   ),
                   h3: ({ children }) => (
-                    <h4 className="text-sm font-semibold text-text mt-2 mb-1">{children}</h4>
+                    <h3 className="text-sm font-semibold text-text mt-3 mb-1.5 first:mt-0">{children}</h3>
                   ),
                   p: ({ children }) => (
-                    <p className="text-sm leading-relaxed text-text mb-2 last:mb-0">{children}</p>
+                    <p className="text-sm leading-relaxed text-text mb-3 last:mb-0">{children}</p>
                   ),
                   ul: ({ children }) => (
-                    <ul className="text-sm space-y-0.5 ml-4 mb-2 list-disc text-text">{children}</ul>
+                    <ul className="text-sm space-y-1.5 ml-5 mb-3 list-disc list-outside text-text">{children}</ul>
                   ),
                   ol: ({ children }) => (
-                    <ol className="text-sm space-y-0.5 ml-4 mb-2 list-decimal text-text">{children}</ol>
+                    <ol className="text-sm space-y-1.5 ml-5 mb-3 list-decimal list-outside text-text">{children}</ol>
                   ),
                   li: ({ children }) => (
-                    <li className="leading-relaxed">{children}</li>
+                    <li className="leading-relaxed pl-0.5">{children}</li>
                   ),
                   strong: ({ children }) => (
                     <strong className="font-semibold text-gray-900">{children}</strong>
                   ),
                   em: ({ children }) => (
-                    <em className="text-text-muted not-italic text-xs">{children}</em>
+                    <em className="italic text-text-light">{children}</em>
                   ),
-                  hr: () => <hr className="my-3 border-gray-100" />,
+                  hr: () => <hr className="my-4 border-t border-gray-200" />,
                   code: ({ children }) => (
-                    <code className="text-xs bg-primary-50 text-primary-700 px-1.5 py-0.5 rounded font-mono">{children}</code>
+                    <code className="text-xs bg-gray-100 text-primary-700 px-1.5 py-0.5 rounded font-mono border border-gray-200">
+                      {children}
+                    </code>
+                  ),
+                  pre: ({ children }) => (
+                    <div className="my-3 overflow-hidden rounded-lg bg-gray-900">
+                      <div className="overflow-x-auto">
+                        <pre className="text-xs leading-relaxed p-4 text-gray-100 font-mono">
+                          {children}
+                        </pre>
+                      </div>
+                    </div>
                   ),
                   blockquote: ({ children }) => (
-                    <div className="flex items-center gap-2 bg-accent-50 border-l-2 border-accent px-3 py-2 rounded-r-lg mb-2">
-                      <div className="w-3.5 h-3.5 border-2 border-accent rounded-full border-t-transparent animate-spin flex-shrink-0" />
-                      <span className="text-xs text-accent-600 font-medium">{children}</span>
+                    <div className="border-l-4 border-primary/30 pl-3 py-1 my-2 bg-primary-50/50 rounded-r">
+                      <div className="text-sm text-text-light">{children}</div>
                     </div>
                   ),
                   table: ({ children }) => (
-                    <div className="overflow-x-auto my-2">
-                      <table className="text-xs w-full border-collapse">{children}</table>
+                    <div className="overflow-x-auto my-3 rounded-lg border border-gray-200">
+                      <table className="w-full text-xs border-collapse">{children}</table>
                     </div>
                   ),
                   thead: ({ children }) => (
-                    <thead className="bg-surface">{children}</thead>
+                    <thead className="bg-gray-50 border-b border-gray-200">{children}</thead>
+                  ),
+                  tbody: ({ children }) => (
+                    <tbody className="divide-y divide-gray-100">{children}</tbody>
+                  ),
+                  tr: ({ children }) => (
+                    <tr className="hover:bg-gray-50/50 transition-colors">{children}</tr>
                   ),
                   th: ({ children }) => (
-                    <th className="text-left px-2.5 py-1.5 font-semibold text-text-light border-b border-gray-100">{children}</th>
+                    <th className="text-left px-3 py-2 font-semibold text-text text-xs whitespace-nowrap">{children}</th>
                   ),
                   td: ({ children }) => (
-                    <td className="px-2.5 py-1.5 border-b border-gray-50">{children}</td>
+                    <td className="px-3 py-2 text-text">{children}</td>
+                  ),
+                  a: ({ href, children }) => (
+                    <a href={href} className="text-primary font-medium underline hover:text-primary-700 transition-colors" target="_blank" rel="noopener noreferrer">{children}</a>
                   ),
                 }}
               >
@@ -120,46 +139,21 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
           {/* Actions */}
           {!isUser && !isStreaming && message.content && (
             <div className="mt-2 flex items-center gap-0.5 pt-2 border-t border-gray-50">
-              <button
-                onClick={handleCopy}
-                className="text-text-muted hover:text-text p-1.5 rounded-lg hover:bg-surface transition-all"
-                title="Copier"
-              >
+              <button onClick={handleCopy} className="text-text-muted hover:text-text p-1.5 rounded-lg hover:bg-surface transition-all" title="Copier">
                 {copied ? (
-                  <svg className="w-3.5 h-3.5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+                  <svg className="w-3.5 h-3.5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                 ) : (
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                  </svg>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
                 )}
               </button>
-              <button
-                onClick={() => setFeedback(feedback === "up" ? null : "up")}
-                className={`p-1.5 rounded-lg transition-all ${
-                  feedback === "up" ? "text-success bg-green-50" : "text-text-muted hover:text-text hover:bg-surface"
-                }`}
-              >
-                <svg className="w-3.5 h-3.5" fill={feedback === "up" ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z" />
-                </svg>
+              <button onClick={() => setFeedback(feedback === "up" ? null : "up")} className={`p-1.5 rounded-lg transition-all ${feedback === "up" ? "text-success bg-green-50" : "text-text-muted hover:text-text hover:bg-surface"}`}>
+                <svg className="w-3.5 h-3.5" fill={feedback === "up" ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z" /></svg>
               </button>
-              <button
-                onClick={() => setFeedback(feedback === "down" ? null : "down")}
-                className={`p-1.5 rounded-lg transition-all ${
-                  feedback === "down" ? "text-danger bg-red-50" : "text-text-muted hover:text-text hover:bg-surface"
-                }`}
-              >
-                <svg className="w-3.5 h-3.5" fill={feedback === "down" ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path d="M10 15v3.586a1 1 0 01-.293.707l-2 2A1 1 0 016 20.586V15H3a2 2 0 01-2-2.3l1.38-9A2 2 0 014.28 2H14v11z" />
-                </svg>
+              <button onClick={() => setFeedback(feedback === "down" ? null : "down")} className={`p-1.5 rounded-lg transition-all ${feedback === "down" ? "text-danger bg-red-50" : "text-text-muted hover:text-text hover:bg-surface"}`}>
+                <svg className="w-3.5 h-3.5" fill={feedback === "down" ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M10 15v3.586a1 1 0 01-.293.707l-2 2A1 1 0 016 20.586V15H3a2 2 0 01-2-2.3l1.38-9A2 2 0 014.28 2H14v11z" /></svg>
               </button>
               {message.tokens && (
-                <span className="ml-auto text-[11px] text-text-muted">
-                  {message.tokens.toLocaleString()} tokens
-                </span>
+                <span className="ml-auto text-[11px] text-text-muted">{message.tokens.toLocaleString()} tokens</span>
               )}
             </div>
           )}

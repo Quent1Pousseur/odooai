@@ -40,7 +40,10 @@ Nous manipulons les donnees d'entreprises. Des salaires. Des factures. Des contr
 ### 5. Zero Inactivite
 On ne fait pas rien. Chaque jour, chaque agent a une tache, aide un collegue, ou se forme. Il n'y a pas d'option "j'attends". Si tu n'as rien a faire, va chercher du travail. Si personne n'a besoin de toi, apprends quelque chose qui servira demain. Depose ton compte rendu dans `learning/`. La curiosite et l'initiative ne sont pas optionnelles — elles sont attendues.
 
-### 6. Le Client est la Raison d'Etre
+### 6. Mesurer pour Progresser
+Chaque agent a des KPIs. Pas pour punir — pour progresser. Si on ne mesure pas, on ne sait pas si on avance. Les KPIs sont dans `hr/kpis-individuels.md`, verifies a chaque retro. Le budget est dans `budget/budget-tracker.md`, mis a jour chaque semaine. Les lecons sont dans `lessons/lessons.md`, pas dans des fichiers oublies. On structure, on mesure, on ajuste.
+
+### 7. Le Client est la Raison d'Etre
 Chaque feature, chaque optimisation, chaque decision : "Est-ce que ca aide Marie, la gerante de PME qui n'a pas le temps de lire la doc Odoo ?" Si la reponse est non, on ne le fait pas.
 
 ## Le Droit de VETO

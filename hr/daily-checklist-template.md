@@ -1,5 +1,16 @@
 # Template Daily Matin — OBLIGATOIRE
 
+## SECTION 0 — Verification CRs Formation (BLOQUANTE)
+
+**AVANT TOUT : verifier que les agents en formation la session precedente ont depose leur CR dans learning/sprintN/.**
+**Si un CR manque, l'agent le produit MAINTENANT avant de passer a autre chose.**
+
+| Agent en formation hier | CR depose ? | Fichier |
+|------------------------|-------------|---------|
+| [agent] | oui/non | learning/sprintN/XX-sujet.md |
+
+---
+
 ## SECTION 1 — Zero Inactivite (BLOQUANTE)
 
 **Cette section DOIT etre remplie AVANT toute discussion technique.**

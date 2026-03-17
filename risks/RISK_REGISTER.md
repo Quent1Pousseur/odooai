@@ -14,7 +14,12 @@
 | R05 | Scaling impossible au-dela de 1000 users | Faible (1) | Haute (3) | 3 🟢 | SRE + DBA | Architecture horizontale, load testing, capacity planning | OUVERT |
 | R06 | Knowledge Graphs incomplets ou incorrects | Moyenne (2) | Haute (3) | 6 🟡 | Odoo Expert + Data Engineer | Validation humaine, evals automatisees | OUVERT |
 | R07 | Churn eleve (> 10% mensuel) | Moyenne (2) | Haute (3) | 6 🟡 | Customer Success + CPO | Health scoring, anti-churn playbook, onboarding < 5 min | OUVERT |
-| (a completer au fur et a mesure) | | | | | | | |
+| R08 | Reponses IA trop vagues — pas assez de valeur | Haute (3) | Critique (4) | 12 🔴 | Prompt Eng + AI Eng | Pivot buddy, few-shot, routing Haiku/Sonnet, eval 8+/10 | OUVERT |
+| R09 | UI/UX pas assez pro pour convaincre | Haute (3) | Haute (3) | 9 🟠 | UX Designer + Frontend | Refonte UI faite, design tokens, iterer | OUVERT |
+| R10 | Pas de staging deploye — tout en localhost | Haute (3) | Haute (3) | 9 🟠 | Infra + DevOps | VPS a commander, Dockerfile pret | OUVERT |
+| R11 | 0 beta users — aucune validation terrain | Haute (3) | Critique (4) | 12 🔴 | Sales + Customer Success | Teaser integrateurs, 5 PME ciblees | OUVERT |
+| R12 | Process non suivi (learnings oublies 5x) | Moyenne (2) | Haute (3) | 6 🟡 | HR Director + PM | Restructuration gouvernance (ce fix) | OUVERT |
+| R13 | Single point of failure Anthropic API | Haute (3) | Haute (3) | 9 🟠 | Vendor Mgr + AI Eng | Fallback OpenAI prevu Sprint 6, retry deja en place | OUVERT |
 
 ## Scoring
 

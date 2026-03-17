@@ -79,3 +79,8 @@ make run             # uvicorn dev server :8000
 - **REVIEWS DOCUMENTEES** : chaque review interne est sauvegardee dans reviews/. Le fondateur doit pouvoir les lire.
 - **CHALLENGES ACTIFS** : les agents DOIVENT se challenger dans les meetings. Pas de consensus mou.
 - **LEARNING SI PAS DE TACHE** : tout agent sans tache produit un CR de formation dans learning/ le jour meme.
+- **VERIFICATION CRs BLOQUANTE** : a chaque daily matin, Section 0 du template = verifier que les CRs de la session precedente existent. Si un CR manque, l'agent le produit AVANT toute discussion. J'ai ete rappele 5 FOIS — c'est fini.
+- **KPIs MESURABLES** : chaque agent a des KPIs dans hr/kpis-individuels.md. Verifies a chaque retro. Pas de KPI = pas de mesure = pas de progres.
+- **WEEKLY RECAP** : chaque vendredi, le PM + CEO font un weekly dans meetings/weekly/. Budget, KPIs, risques, plan. Template : meetings/weekly/template.md.
+- **BUDGET TRACKER** : le CFO met a jour budget/budget-tracker.md chaque semaine. Couts LLM + infra + outils.
+- **PROCESS.md** : le document central. TOUT le monde le lit. Si un process n'est pas dans PROCESS.md, il n'existe pas.

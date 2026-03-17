@@ -165,12 +165,52 @@ async def _connect_odoo(request: ChatRequest) -> tuple[Any, int]:
         from odooai.domain.entities.connection import OdooApiType
         from odooai.infrastructure.odoo.client import OdooClient
 
+        odoo_url = request.odoo_url
+        odoo_db = request.odoo_db
+        odoo_login = request.odoo_login
+        odoo_api_key = request.odoo_api_key
+
+        # Support saved connections: api_key = "connection:UUID"
+        if odoo_api_key.startswith("connection:"):
+            import contextlib
+
+            from sqlalchemy import select
+
+            from odooai.config import get_settings
+            from odooai.infrastructure.crypto import AESCrypto
+            from odooai.infrastructure.db.database import get_session
+            from odooai.infrastructure.db.models import OdooConnection
+
+            conn_id = odoo_api_key.split(":", 1)[1]
+            settings = get_settings()
+
+            session_gen = get_session()
+            session = await session_gen.__anext__()
+            try:
+                result = await session.execute(
+                    select(OdooConnection).where(OdooConnection.id == conn_id),
+                )
+                conn = result.scalar_one_or_none()
+            finally:
+                with contextlib.suppress(StopAsyncIteration):
+                    await session_gen.__anext__()
+
+            if not conn or not settings.odoo_crypto_key:
+                logger.warning("Saved connection not found", conn_id=conn_id)
+                return None, 0
+
+            crypto = AESCrypto(key_b64=settings.odoo_crypto_key)
+            odoo_url = conn.url
+            odoo_db = conn.db_name
+            odoo_login = conn.login
+            odoo_api_key = crypto.decrypt(conn.api_key_encrypted)
+
         client = OdooClient(
-            base_url=request.odoo_url,
-            db=request.odoo_db,
-            api_type=OdooApiType.XML_RPC,  # Auto-detect in future
+            base_url=odoo_url,
+            db=odoo_db,
+            api_type=OdooApiType.XML_RPC,
         )
-        user_info = await client.authenticate(request.odoo_login, request.odoo_api_key)
+        user_info = await client.authenticate(odoo_login, odoo_api_key)
         logger.info("Odoo connected via API", uid=user_info.uid)
         return client, user_info.uid
     except Exception as exc:

@@ -45,7 +45,26 @@ export default function ChatPage() {
 
   useEffect(() => {
     loadConversations();
+    loadSavedConnection();
   }, []);
+
+  const loadSavedConnection = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/connections`);
+      if (!res.ok) return;
+      const connections = await res.json();
+      if (connections.length > 0) {
+        // Auto-connect to the first (or default) saved connection
+        const conn = connections.find((c: any) => c.is_default) || connections[0];
+        setOdooCreds({
+          url: conn.url,
+          db: conn.db_name,
+          login: conn.login,
+          apiKey: `connection:${conn.id}`,
+        });
+      }
+    } catch { /* API not available */ }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -182,8 +182,11 @@ async def test_connection(
     api_key = crypto.decrypt(conn.api_key_encrypted)
 
     try:
-        client = OdooClient(base_url=conn.url, db=conn.db_name)
-        uid = await client.authenticate(api_key, conn.login)
+        from odooai.domain.entities.connection import OdooApiType
+
+        # Auto-detect: try JSON-2 first (Odoo 19+), fallback to XML-RPC (17/18)
+        client = OdooClient(base_url=conn.url, db=conn.db_name, api_type=OdooApiType.XML_RPC)
+        uid = await client.authenticate(conn.login, api_key)
 
         # Update last_connected_at
         session_gen2 = get_session()

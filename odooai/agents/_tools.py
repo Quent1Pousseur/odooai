@@ -19,61 +19,35 @@ logger = structlog.get_logger(__name__)
 # Max tool calls per question to prevent infinite loops and cost blowup
 MAX_TOOL_CALLS = 10
 
-# Tools exposed to the LLM
+# Tools exposed to the LLM — descriptions are PLAYBOOKS
 TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "name": "odoo_search_read",
         "description": (
-            "Search and read records from the client's Odoo database. "
-            "Returns a list of records with the requested fields. "
-            "Use this to answer questions about the client's data."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "model": {
-                    "type": "string",
-                    "description": "Odoo model technical name (e.g. 'sale.order', 'account.move')",
-                },
-                "domain": {
-                    "type": "array",
-                    "description": "Odoo domain filter (e.g. [['state','=','draft']])",
-                },
-                "fields": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "Fields to return (e.g. ['name','state','amount_total'])",
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "Max records to return (default 10)",
-                    "default": 10,
-                },
-            },
-            "required": ["model", "domain", "fields"],
-        },
-    },
-    {
-        "name": "odoo_search_count",
-        "description": (
-            "Count records matching a filter in the client's Odoo database. "
-            "Use this to answer 'how many' questions."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "model": {"type": "string", "description": "Odoo model technical name"},
-                "domain": {"type": "array", "description": "Odoo domain filter"},
-            },
-            "required": ["model", "domain"],
-        },
-    },
-    {
-        "name": "odoo_read_group",
-        "description": (
-            "Group and aggregate records from Odoo. "
-            "Use this for statistics: totals, averages, counts by group. "
-            "Example: total revenue by salesperson, count of orders by state."
+            "Search and read records from the user's Odoo database.\n\n"
+            "USE THIS for: listing records, finding specific data, "
+            "answering questions about the user's business data.\n\n"
+            "DOMAIN SYNTAX: [['field','operator','value']]\n"
+            "Operators: =, !=, >, <, >=, <=, like, ilike, in, not in, "
+            "child_of, parent_of\n"
+            "OR logic: ['|', condition1, condition2]\n"
+            "Dot notation: 'partner_id.country_id.code'\n\n"
+            "COMMON MODELS:\n"
+            "- sale.order: quotations & sales orders "
+            "(state: draft/sent/sale/cancel)\n"
+            "- account.move: invoices & journal entries "
+            "(move_type: out_invoice/in_invoice/entry, "
+            "state: draft/posted/cancel)\n"
+            "- stock.picking: delivery/reception orders\n"
+            "- res.partner: contacts/customers/vendors\n"
+            "- product.product: products\n"
+            "- hr.employee: employees\n"
+            "- purchase.order: purchase orders\n"
+            "- crm.lead: CRM opportunities\n\n"
+            "TIPS:\n"
+            "- If unsure about fields, call odoo_fields_get first\n"
+            "- Use limit to avoid fetching too many records\n"
+            "- For Many2one fields, Odoo returns [id, name]"
         ),
         "input_schema": {
             "type": "object",
@@ -86,15 +60,66 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
                     "type": "array",
                     "description": "Odoo domain filter",
                 },
+                "fields": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Fields to return",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max records (default 10, max 50)",
+                    "default": 10,
+                },
+            },
+            "required": ["model", "domain", "fields"],
+        },
+    },
+    {
+        "name": "odoo_search_count",
+        "description": (
+            "Count records matching a filter. "
+            "Use for 'how many' questions. Faster than search_read."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "model": {"type": "string"},
+                "domain": {"type": "array"},
+            },
+            "required": ["model", "domain"],
+        },
+    },
+    {
+        "name": "odoo_read_group",
+        "description": (
+            "Aggregate records with GROUP BY. Much faster than fetching "
+            "all records.\n\n"
+            "USE THIS for: totals, averages, counts by group, "
+            "rankings, statistics.\n\n"
+            "FIELD SPECS: 'field:agg' where agg = sum, avg, min, "
+            "max, count\n"
+            "DATE GROUPING: 'date_field:month', 'date_field:quarter', "
+            "'date_field:year'\n\n"
+            "EXAMPLES:\n"
+            "- Revenue by customer: model=sale.order, "
+            "fields=['amount_total:sum'], groupby=['partner_id']\n"
+            "- Orders by state: model=sale.order, "
+            "fields=['__count'], groupby=['state']\n"
+            "- Monthly revenue: model=sale.order, "
+            "fields=['amount_total:sum'], groupby=['date_order:month']"
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "model": {"type": "string"},
+                "domain": {"type": "array"},
                 "groupby": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Fields to group by (e.g. ['state', 'user_id'])",
                 },
                 "fields": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Fields to aggregate (e.g. ['amount_total:sum'])",
                 },
             },
             "required": ["model", "domain", "groupby", "fields"],
@@ -103,68 +128,79 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
         "name": "odoo_fields_get",
         "description": (
-            "Get the list of fields available on an Odoo model. "
-            "Use this BEFORE search_read if you are not sure which fields exist. "
-            "Returns field names with their types."
+            "List fields available on a model with their types.\n\n"
+            "ALWAYS call this BEFORE search_read if you are not 100% "
+            "sure which fields exist on the model. This prevents "
+            "'Invalid field' errors.\n\n"
+            "Also useful to check if a model exists on this instance."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "model": {
-                    "type": "string",
-                    "description": "Odoo model technical name (e.g. 'sale.order')",
-                },
+                "model": {"type": "string"},
             },
             "required": ["model"],
         },
     },
     {
-        "name": "odoo_create",
+        "name": "odoo_execute",
         "description": (
-            "Create a new record in Odoo. Use this when the user asks to create "
-            "a quotation, an invoice, a contact, etc. "
-            "Returns the ID of the created record."
+            "Execute any method on an Odoo model. This is the most "
+            "powerful tool — handles create, write, copy, and all "
+            "workflow transitions.\n\n"
+            "MANDATORY: Always confirm with the user before executing "
+            "write operations.\n\n"
+            "CREATE a record:\n"
+            "  method='create', args=[{field: value}]\n"
+            "  Example: create a quotation:\n"
+            "    model='sale.order', method='create',\n"
+            "    args=[{'partner_id': 42}]\n\n"
+            "WRITE (update) records:\n"
+            "  method='write', args=[[record_ids], {field: value}]\n"
+            "  Example: update a partner name:\n"
+            "    model='res.partner', method='write',\n"
+            "    args=[[42], {'name': 'New Name'}]\n\n"
+            "WORKFLOW TRANSITIONS (no args needed):\n"
+            "  method='action_confirm' — confirm quotation → sale\n"
+            "  method='action_cancel' — cancel\n"
+            "  method='action_draft' — reset to draft\n"
+            "  method='action_post' — validate journal entry\n"
+            "  method='button_validate' — validate transfer\n"
+            "  args=[[record_id]] (just the ID, no other args)\n\n"
+            "ONE2MANY inline creation:\n"
+            "  'order_line': [(0, 0, {child_values})]\n"
+            "  Example: quotation with lines:\n"
+            "    args=[{'partner_id': 42, 'order_line': [\n"
+            "      (0, 0, {'product_id': 1, 'product_uom_qty': 5})"
+            "\n    ]}]\n\n"
+            "MANY2MANY commands:\n"
+            "  [(6, 0, [ids])] — replace all\n"
+            "  [(4, id, 0)] — add one\n"
+            "  [(3, id, 0)] — remove one\n\n"
+            "BLOCKED: unlink (delete) and sudo are permanently "
+            "blocked for safety.\n\n"
+            "PITFALLS:\n"
+            "- Do NOT pass args for workflow methods — just [id]\n"
+            "- For Many2one fields, pass integer ID not name\n"
+            "- For selection fields, use technical key ('draft') "
+            "not label ('Quotation')\n"
+            "- For dates, use ISO format: '2025-04-15'"
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "model": {
+                "model": {"type": "string"},
+                "method": {
                     "type": "string",
-                    "description": "Odoo model (e.g. 'sale.order', 'res.partner')",
+                    "description": "Method name: create, write, "
+                    "copy, action_confirm, action_post, etc.",
                 },
-                "values": {
-                    "type": "object",
-                    "description": "Field values for the new record",
-                },
-            },
-            "required": ["model", "values"],
-        },
-    },
-    {
-        "name": "odoo_write",
-        "description": (
-            "Update existing records in Odoo. Use this when the user asks to "
-            "modify, update, or change a record. "
-            "Requires record IDs and the values to update."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "model": {
-                    "type": "string",
-                    "description": "Odoo model",
-                },
-                "ids": {
+                "args": {
                     "type": "array",
-                    "items": {"type": "integer"},
-                    "description": "Record IDs to update",
-                },
-                "values": {
-                    "type": "object",
-                    "description": "Field values to update (e.g. {'state': 'done'})",
+                    "description": "Method arguments",
                 },
             },
-            "required": ["model", "ids", "values"],
+            "required": ["model", "method", "args"],
         },
     },
 ]
@@ -254,10 +290,8 @@ async def execute_tool(
             return await _exec_read_group(tool_input, odoo_client, uid, api_key)
         if tool_name == "odoo_fields_get":
             return await _exec_fields_get(tool_input, odoo_client, uid, api_key)
-        if tool_name == "odoo_create":
-            return await _exec_create(tool_input, odoo_client, uid, api_key)
-        if tool_name == "odoo_write":
-            return await _exec_write(tool_input, odoo_client, uid, api_key)
+        if tool_name == "odoo_execute":
+            return await _exec_execute(tool_input, odoo_client, uid, api_key)
         return f"Unknown tool: {tool_name}"
     except Exception as exc:
         error_str = str(exc)
@@ -410,67 +444,63 @@ async def _exec_fields_get(
     return "\n".join(lines)
 
 
-async def _exec_create(
+async def _exec_execute(
     inp: dict[str, Any],
     client: IOdooClient,
     uid: int,
     api_key: str,
 ) -> str:
-    """Execute odoo_create — create a new record."""
+    """Execute any Odoo method — the universal tool."""
     model = str(inp.get("model", ""))
-    values = inp.get("values", {})
-    if isinstance(values, str):
+    method = str(inp.get("method", ""))
+    raw_args = inp.get("args", [])
+
+    # Normalize args
+    if isinstance(raw_args, str):
         import ast
 
         try:
-            values = ast.literal_eval(values)
+            raw_args = ast.literal_eval(raw_args)
         except (ValueError, SyntaxError):
-            return "Erreur: les valeurs ne sont pas un dict valide."
+            return "Error: args is not a valid list."
+    if not isinstance(raw_args, list):
+        raw_args = [raw_args]
 
-    # Guardian gate — blocks sensitive models and dangerous methods
-    guarded_odoo_write_check(model, "create")
-
-    try:
-        new_id = await client.execute(api_key, model, "create", [values], uid=uid)
-        logger.info("Record created", model=model, record_id=new_id)
-        return f"Enregistrement cree avec succes : {model} ID={new_id}"
-    except Exception as exc:
-        return f"Erreur creation: {str(exc)[:200]}"
-
-
-async def _exec_write(
-    inp: dict[str, Any],
-    client: IOdooClient,
-    uid: int,
-    api_key: str,
-) -> str:
-    """Execute odoo_write — update existing records."""
-    model = str(inp.get("model", ""))
-    record_ids = inp.get("ids", [])
-    values = inp.get("values", {})
-
-    if isinstance(record_ids, str):
-        import ast
-
-        try:
-            record_ids = ast.literal_eval(record_ids)
-        except (ValueError, SyntaxError):
-            return "Erreur: les IDs ne sont pas une liste valide."
-
-    if isinstance(values, str):
-        import ast
-
-        try:
-            values = ast.literal_eval(values)
-        except (ValueError, SyntaxError):
-            return "Erreur: les valeurs ne sont pas un dict valide."
+    # Blocked methods
+    blocked = {"unlink", "sudo", "_sudo"}
+    if method in blocked:
+        return f"Error: method '{method}' is blocked for safety."
 
     # Guardian gate
-    guarded_odoo_write_check(model, "write")
+    guarded_odoo_write_check(model, method)
 
     try:
-        await client.execute(api_key, model, "write", [record_ids, values], uid=uid)
-        logger.info("Records updated", model=model, ids=record_ids)
-        return f"Mis a jour : {model} IDs={record_ids}"
+        result = await client.execute(
+            api_key,
+            model,
+            method,
+            raw_args,
+            uid=uid,
+        )
+        logger.info("Execute OK", model=model, method=method)
+
+        # Format result based on method
+        if method == "create":
+            return f"Created {model} ID={result}"
+        if method == "write":
+            return f"Updated {model} successfully."
+        if method == "copy":
+            return f"Copied to {model} ID={result}"
+        if method.startswith("action_") or method.startswith("button_"):
+            return f"Executed {model}.{method} successfully."
+        return f"Result: {str(result)[:500]}"
     except Exception as exc:
-        return f"Erreur mise a jour: {str(exc)[:200]}"
+        error_str = str(exc)
+        if "doesn't exist" in error_str:
+            return f"Error: model '{model}' does not exist."
+        if "Invalid field" in error_str:
+            return (
+                f"Error: invalid field. Check with odoo_fields_get. "
+                f"Detail: {error_str.split('ValueError: ')[-1][:150]}"
+            )
+        return f"Error: {error_str[:200]}"

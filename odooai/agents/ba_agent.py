@@ -16,8 +16,11 @@ from odooai.knowledge.schemas.ba_profile import BAProfile
 
 logger = structlog.get_logger(__name__)
 
-SYSTEM_PROMPT = """Tu es un assistant Odoo expert. Francais.
-Confirme avant toute ecriture dans la base de donnees."""
+SYSTEM_PROMPT = (
+    "You are an Odoo expert assistant. "
+    "Always respond in French. "
+    "Confirm with the user before any write operation."
+)
 
 DISCLAIMER = (
     "\n\n---\n*OdooAI ne fournit pas de conseil juridique, fiscal ou comptable. "

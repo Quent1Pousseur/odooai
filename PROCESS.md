@@ -136,9 +136,13 @@ A la fin de la session, l'agent a produit :
 
 ## 5. Cellule R&D — Projets internes
 
+### Regle #1 — OdooAI passe TOUJOURS en premier
+
+**Le core business est OdooAI.** La R&D n'existe QUE quand un agent n'a aucune tache sur le projet principal. Si une tache OdooAI se libere, l'agent quitte immediatement son projet R&D pour la prendre. La R&D ne doit JAMAIS ralentir le produit principal.
+
 ### Qu'est-ce qu'un projet R&D ?
 
-Un mini-projet interne qui peut servir a OdooAI. C'est l'application concrete de ce que les agents apprennent dans leurs formations.
+Un mini-projet interne qui peut servir a la boite. C'est l'application concrete de ce que les agents apprennent dans leurs formations.
 
 **Exemples :**
 - Un agent a appris OpenTelemetry → il prototype l'integration dans le backend
@@ -165,16 +169,27 @@ Plusieurs agents sans tache peuvent rejoindre le meme projet :
 - 1-3 contributeurs → selon disponibilite
 - Le lead attribue les sous-taches
 
-**4. Documentation**
-Chaque projet a un fichier `docs/rnd/NN-nom-projet.md` (template dans docs/TEMPLATES.md) :
-- Objectif, plan, equipe, avancement par session
-- Mis a jour a chaque session de travail
+**4. Documentation + Code**
+
+Chaque projet a **2 emplacements** :
+- `docs/rnd/NN-nom-projet.md` → documentation (objectif, plan, equipe, avancement)
+- `rnd/nom-projet/` → code source du prototype (si applicable)
+
+```
+docs/rnd/28-auto-eval.md         # Doc du projet
+rnd/auto-eval/                   # Code du prototype
+  README.md
+  main.py
+  ...
+```
+
+**Le code R&D ne va JAMAIS dans odooai/ ou frontend/.** C'est isole. Quand un projet est "Adopt", son code est merge via PR.
 
 **5. Livraison**
 L'objectif de chaque projet R&D est un **MVP fonctionnel** :
-- Un prototype qui marche
-- Une demo ou un benchmark
-- Un document technique avec recommandations
+- Un prototype qui tourne
+- Un README qui explique comment le lancer
+- Une demo au Show & Tell
 
 **6. Evaluation (a chaque retro)**
 Le CTO et le fondateur evaluent :
@@ -191,21 +206,29 @@ Le CTO et le fondateur evaluent :
 | MVP obligatoire | Pas de prototype eternel — un MVP en 1-2 sprints max |
 | Documentation a jour | Le fichier rnd/ est mis a jour a CHAQUE session |
 | Budget max $50/sprint | Les couts LLM/API doivent etre approuves par le CFO |
-| Code dans une branche | Si du code est produit, branche git separee |
+| Code isole | Le code R&D va dans `rnd/[nom-projet]/`, JAMAIS dans odooai/ ou frontend/ |
+| Branche separee | Si le projet est mature, branche git pour la PR vers le code principal |
 | Show & Tell | Chaque projet R&D est presente au Show & Tell du sprint |
 
 ### Idees de projets R&D (inspirees des learnings)
 
-| Source learning | Projet R&D possible | Agents potentiels |
-|----------------|--------------------|--------------------|
-| OpenTelemetry (38) | Dashboard metriques temps reel | Observability + Frontend |
-| PWA (39) | App mobile installable | Mobile + Frontend |
-| Typing indicators (43) | ToolCallCard anime avec Framer Motion | Chat Eng + Brand Designer |
-| Eval framework (28) | Auto-scoring LLM avec ML | Data Scientist + Prompt Eng |
-| Workflow parsing (10) | State machines dans les KG | Odoo Expert + Data Eng |
-| SEO content (37) | Generateur d'articles depuis les KG | Content Strat + AI Eng |
-| Community bot (47) | Bot Discord pour beta users | Community Mgr + Chat Eng |
-| Alembic async (30) | Migration PostgreSQL complete | DBA + Senior Backend |
+| Source | Projet R&D possible | Agents potentiels | Type |
+|--------|--------------------|--------------------|------|
+| OpenTelemetry (38) | Dashboard metriques temps reel | Observability + Frontend | Feature OdooAI |
+| PWA (39) | App mobile installable | Mobile + Frontend | Feature OdooAI |
+| Typing indicators (43) | ToolCallCard anime avec Framer Motion | Chat Eng + Brand Designer | Feature OdooAI |
+| Eval framework (28) | Auto-scoring LLM avec ML | Data Scientist + Prompt Eng | Feature OdooAI |
+| Workflow parsing (10) | State machines dans les KG | Odoo Expert + Data Eng | Feature OdooAI |
+| SEO content (37) | Generateur d'articles depuis les KG | Content Strat + AI Eng | **Outil separe** |
+| Community bot (47) | Bot Discord pour beta users | Community Mgr + Chat Eng | **Outil separe** |
+| Cold outreach (05) | Leadgen scrapper Odoo Partners | Sales + Growth | **Outil separe** |
+| Competitive (34) | Scrapper veille concurrentielle | Competitive Intel + Data Eng | **Outil separe** |
+| Alembic async (30) | Migration PostgreSQL complete | DBA + Senior Backend | Feature OdooAI |
+
+**Les projets R&D peuvent etre :**
+- Des **features** pour OdooAI (code dans rnd/, merge plus tard)
+- Des **outils separes** (scrapper, leadgen, bot, analytics) — projets autonomes dans rnd/[nom-projet]/
+- Des **POCs techniques** (benchmark, integration, prototype)
 
 ---
 

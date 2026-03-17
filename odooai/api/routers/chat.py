@@ -66,8 +66,9 @@ async def _stream_response(request: ChatRequest) -> Any:
     # Optional Odoo client
     odoo_client = None
     odoo_uid = 0
+    real_odoo_api_key = ""
     if request.odoo_url and request.odoo_db and request.odoo_api_key:
-        odoo_client, odoo_uid = await _connect_odoo(request)
+        odoo_client, odoo_uid, real_odoo_api_key = await _connect_odoo(request)
 
     # Send "thinking" event
     yield _sse_event({"type": "status", "content": "Recherche en cours..."})
@@ -128,7 +129,7 @@ async def _stream_response(request: ChatRequest) -> Any:
             request.model,
             odoo_client=odoo_client,
             odoo_uid=odoo_uid,
-            odoo_api_key=request.odoo_api_key,
+            odoo_api_key=real_odoo_api_key,
             max_tools=request.max_tools,
         ):
             yield _sse_event(event)
@@ -159,8 +160,8 @@ async def _stream_response(request: ChatRequest) -> Any:
         yield _sse_event({"type": "error", "content": f"Erreur ({err_type})"})
 
 
-async def _connect_odoo(request: ChatRequest) -> tuple[Any, int]:
-    """Connect to Odoo instance. Returns (client, uid) or (None, 0)."""
+async def _connect_odoo(request: ChatRequest) -> tuple[Any, int, str]:
+    """Connect to Odoo instance. Returns (client, uid, real_api_key) or (None, 0, "")."""
     try:
         from odooai.domain.entities.connection import OdooApiType
         from odooai.infrastructure.odoo.client import OdooClient
@@ -197,7 +198,7 @@ async def _connect_odoo(request: ChatRequest) -> tuple[Any, int]:
 
             if not conn or not settings.odoo_crypto_key:
                 logger.warning("Saved connection not found", conn_id=conn_id)
-                return None, 0
+                return None, 0, ""
 
             crypto = AESCrypto(key_b64=settings.odoo_crypto_key)
             odoo_url = conn.url
@@ -212,10 +213,10 @@ async def _connect_odoo(request: ChatRequest) -> tuple[Any, int]:
         )
         user_info = await client.authenticate(odoo_login, odoo_api_key)
         logger.info("Odoo connected via API", uid=user_info.uid)
-        return client, user_info.uid
+        return client, user_info.uid, odoo_api_key
     except Exception as exc:
         logger.warning("Odoo connection failed", error=str(exc))
-        return None, 0
+        return None, 0, ""
 
 
 def _sse_event(data: dict[str, Any]) -> str:

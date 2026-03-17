@@ -45,7 +45,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "- purchase.order: purchase orders\n"
             "- crm.lead: CRM opportunities\n\n"
             "WORKFLOW — follow these steps:\n"
-            "1. If unsure about fields → call odoo_fields_get first\n"
+            "1. If unsure about fields → call odoo_schema first\n"
             "2. Search with a broad filter → refine if too many results\n"
             "3. If search returns nothing → try different field names "
             "or broader domain\n"
@@ -129,18 +129,38 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
         },
     },
     {
-        "name": "odoo_fields_get",
+        "name": "odoo_schema",
         "description": (
-            "List fields available on a model with their types.\n\n"
-            "ALWAYS call this BEFORE search_read if you are not 100% "
-            "sure which fields exist on the model. This prevents "
-            "'Invalid field' errors.\n\n"
-            "Also useful to check if a model exists on this instance."
+            "Explore Odoo model structure. 3 modes:\n\n"
+            "MODE 'compact' (default, cheapest):\n"
+            "  Returns field names with types on one line each.\n"
+            "  Use BEFORE search_read if unsure about field names.\n"
+            "  Example: 'name: char*, partner_id: many2one, "
+            "state: selection'\n"
+            "  (* = required)\n\n"
+            "MODE 'detailed':\n"
+            "  Returns full metadata: type, required, readonly, "
+            "string label, selection values, relation target.\n"
+            "  Use when you need selection options or relation "
+            "targets.\n\n"
+            "MODE 'list':\n"
+            "  Returns all model names available on this instance.\n"
+            "  Use to discover which models exist.\n"
+            "  Pass model='_all' with mode='list'.\n\n"
+            "ALWAYS call this before querying an unfamiliar model."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "model": {"type": "string"},
+                "model": {
+                    "type": "string",
+                    "description": "Model name, or '_all' for list mode",
+                },
+                "mode": {
+                    "type": "string",
+                    "enum": ["compact", "detailed", "list"],
+                    "description": "compact (default), detailed, or list",
+                },
             },
             "required": ["model"],
         },
@@ -297,8 +317,8 @@ async def execute_tool(
             return await _exec_search_count(tool_input, odoo_client, uid, api_key)
         if tool_name == "odoo_read_group":
             return await _exec_read_group(tool_input, odoo_client, uid, api_key)
-        if tool_name == "odoo_fields_get":
-            return await _exec_fields_get(tool_input, odoo_client, uid, api_key)
+        if tool_name == "odoo_schema":
+            return await _exec_schema(tool_input, odoo_client, uid, api_key)
         if tool_name == "odoo_execute":
             return await _exec_execute(tool_input, odoo_client, uid, api_key)
         return f"Unknown tool: {tool_name}"
@@ -399,48 +419,87 @@ async def _exec_read_group(
     return json.dumps(raw, ensure_ascii=False, default=str)
 
 
-async def _exec_fields_get(
+async def _exec_schema(
     inp: dict[str, Any],
     client: IOdooClient,
     uid: int,
     api_key: str,
 ) -> str:
-    """Execute odoo_fields_get — list available fields on a model."""
+    """Execute odoo_schema — explore model structure in 3 modes."""
     model = str(inp.get("model", ""))
+    mode = str(inp.get("mode", "compact"))
+
+    # LIST mode — return all model names
+    if mode == "list" or model == "_all":
+        try:
+            models_raw = await client.search_read(
+                api_key,
+                "ir.model",
+                [["transient", "=", False]],
+                ["model", "name"],
+                limit=200,
+                uid=uid,
+            )
+            if isinstance(models_raw, list):
+                model_lines = [f"{m['model']}: {m.get('name', '')}" for m in models_raw]
+                return "\n".join(model_lines)
+            return "Could not list models."
+        except Exception as exc:
+            return f"Error listing models: {str(exc)[:150]}"
 
     # Guardian gate
     guarded_odoo_write_check(model, "fields_get")
 
     try:
+        attrs = ["string", "type", "required"]
+        if mode == "detailed":
+            attrs.extend(["readonly", "selection", "relation"])
         raw = await client.execute(
             api_key,
             model,
             "fields_get",
             [],
             uid=uid,
-            kwargs={"attributes": ["string", "type", "required"]},
+            kwargs={"attributes": attrs},
         )
     except Exception as exc:
         error_str = str(exc)
         if "doesn't exist" in error_str:
-            return f"Le modele '{model}' n'existe pas sur cette instance."
-        return f"Erreur: {error_str[:200]}"
-
-    import json
+            return f"Model '{model}' does not exist on this instance."
+        return f"Error: {error_str[:200]}"
 
     if not isinstance(raw, dict):
-        return f"Model {model} not found or no fields available."
+        return f"Model {model} not found."
 
-    # Return compact JSON — field: {type, required, string}
+    # COMPACT mode — one line per field, minimal tokens
+    if mode == "compact":
+        lines: list[str] = []
+        for fname, fd in sorted(raw.items()):
+            if fname.startswith("__"):
+                continue
+            req = "*" if fd.get("required") else ""
+            lines.append(f"{fname}: {fd.get('type', '?')}{req}")
+        return "\n".join(lines)
+
+    # DETAILED mode — full metadata as JSON
+    import json
+
     compact: dict[str, dict[str, Any]] = {}
-    for fname, fdata in list(raw.items())[:40]:
+    for fname, fd in sorted(raw.items()):
         if fname.startswith("__"):
             continue
-        compact[fname] = {
-            "type": fdata.get("type", ""),
-            "required": fdata.get("required", False),
-            "string": fdata.get("string", ""),
+        entry: dict[str, Any] = {
+            "type": fd.get("type", ""),
+            "label": fd.get("string", ""),
+            "required": fd.get("required", False),
         }
+        if fd.get("readonly"):
+            entry["readonly"] = True
+        if fd.get("selection"):
+            entry["selection"] = fd["selection"]
+        if fd.get("relation"):
+            entry["relation"] = fd["relation"]
+        compact[fname] = entry
 
     return json.dumps(compact, ensure_ascii=False)
 
@@ -501,7 +560,7 @@ async def _exec_execute(
             return f"Error: model '{model}' does not exist."
         if "Invalid field" in error_str:
             return (
-                f"Error: invalid field. Check with odoo_fields_get. "
+                f"Error: invalid field. Check with odoo_schema. "
                 f"Detail: {error_str.split('ValueError: ')[-1][:150]}"
             )
         return f"Error: {error_str[:200]}"

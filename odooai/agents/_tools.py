@@ -118,6 +118,55 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "required": ["model"],
         },
     },
+    {
+        "name": "odoo_create",
+        "description": (
+            "Create a new record in Odoo. Use this when the user asks to create "
+            "a quotation, an invoice, a contact, etc. "
+            "Returns the ID of the created record."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "model": {
+                    "type": "string",
+                    "description": "Odoo model (e.g. 'sale.order', 'res.partner')",
+                },
+                "values": {
+                    "type": "object",
+                    "description": "Field values for the new record",
+                },
+            },
+            "required": ["model", "values"],
+        },
+    },
+    {
+        "name": "odoo_write",
+        "description": (
+            "Update existing records in Odoo. Use this when the user asks to "
+            "modify, update, or change a record. "
+            "Requires record IDs and the values to update."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "model": {
+                    "type": "string",
+                    "description": "Odoo model",
+                },
+                "ids": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "Record IDs to update",
+                },
+                "values": {
+                    "type": "object",
+                    "description": "Field values to update (e.g. {'state': 'done'})",
+                },
+            },
+            "required": ["model", "ids", "values"],
+        },
+    },
 ]
 
 
@@ -205,6 +254,10 @@ async def execute_tool(
             return await _exec_read_group(tool_input, odoo_client, uid, api_key)
         if tool_name == "odoo_fields_get":
             return await _exec_fields_get(tool_input, odoo_client, uid, api_key)
+        if tool_name == "odoo_create":
+            return await _exec_create(tool_input, odoo_client, uid, api_key)
+        if tool_name == "odoo_write":
+            return await _exec_write(tool_input, odoo_client, uid, api_key)
         return f"Unknown tool: {tool_name}"
     except Exception as exc:
         error_str = str(exc)
@@ -355,3 +408,69 @@ async def _exec_fields_get(
         lines.append(f"  ... et {len(raw) - 30} autres champs")
 
     return "\n".join(lines)
+
+
+async def _exec_create(
+    inp: dict[str, Any],
+    client: IOdooClient,
+    uid: int,
+    api_key: str,
+) -> str:
+    """Execute odoo_create — create a new record."""
+    model = str(inp.get("model", ""))
+    values = inp.get("values", {})
+    if isinstance(values, str):
+        import ast
+
+        try:
+            values = ast.literal_eval(values)
+        except (ValueError, SyntaxError):
+            return "Erreur: les valeurs ne sont pas un dict valide."
+
+    # Guardian gate — blocks sensitive models and dangerous methods
+    guarded_odoo_write_check(model, "create")
+
+    try:
+        new_id = await client.execute(api_key, model, "create", [values], uid=uid)
+        logger.info("Record created", model=model, record_id=new_id)
+        return f"Enregistrement cree avec succes : {model} ID={new_id}"
+    except Exception as exc:
+        return f"Erreur creation: {str(exc)[:200]}"
+
+
+async def _exec_write(
+    inp: dict[str, Any],
+    client: IOdooClient,
+    uid: int,
+    api_key: str,
+) -> str:
+    """Execute odoo_write — update existing records."""
+    model = str(inp.get("model", ""))
+    record_ids = inp.get("ids", [])
+    values = inp.get("values", {})
+
+    if isinstance(record_ids, str):
+        import ast
+
+        try:
+            record_ids = ast.literal_eval(record_ids)
+        except (ValueError, SyntaxError):
+            return "Erreur: les IDs ne sont pas une liste valide."
+
+    if isinstance(values, str):
+        import ast
+
+        try:
+            values = ast.literal_eval(values)
+        except (ValueError, SyntaxError):
+            return "Erreur: les valeurs ne sont pas un dict valide."
+
+    # Guardian gate
+    guarded_odoo_write_check(model, "write")
+
+    try:
+        await client.execute(api_key, model, "write", [record_ids, values], uid=uid)
+        logger.info("Records updated", model=model, ids=record_ids)
+        return f"Mis a jour : {model} IDs={record_ids}"
+    except Exception as exc:
+        return f"Erreur mise a jour: {str(exc)[:200]}"

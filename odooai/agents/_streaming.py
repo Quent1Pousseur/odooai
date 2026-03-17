@@ -13,7 +13,7 @@ from typing import Any
 import structlog
 
 from odooai.agents._tools import TOOL_DEFINITIONS, execute_tool
-from odooai.agents.ba_agent import DISCLAIMER, SYSTEM_PROMPT
+from odooai.agents.ba_agent import SYSTEM_PROMPT
 from odooai.knowledge.schemas.ba_profile import BAProfile
 
 logger = structlog.get_logger(__name__)
@@ -32,7 +32,7 @@ def _tool_message(tool_name: str) -> str:
 
 async def stream_ba_response(
     question: str,
-    profile: BAProfile,
+    profile: BAProfile | None,
     anthropic_api_key: str,
     model: str = "claude-sonnet-4-20250514",
     odoo_client: Any | None = None,
@@ -56,7 +56,7 @@ async def stream_ba_response(
     try:
         from odooai.knowledge.rag import get_context_for_question
 
-        rag_context = get_context_for_question(question, n_results=5)
+        rag_context = get_context_for_question(question, n_results=3)
     except Exception:
         pass  # RAG not built yet — continue without
 
@@ -198,13 +198,12 @@ async def stream_ba_response(
         else:
             break
 
-    # Disclaimer
-    yield {"type": "text", "content": DISCLAIMER}
+    # No disclaimer — clean response
 
     # Done event with metadata
     yield {
         "type": "done",
         "tokens": total_tokens,
-        "sources": profile.modules_covered,
-        "domain": profile.domain_id,
+        "sources": profile.modules_covered if profile else [],
+        "domain": profile.domain_id if profile else "",
     }

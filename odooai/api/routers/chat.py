@@ -75,15 +75,8 @@ async def _stream_response(request: ChatRequest) -> Any:
 
     try:
         from odooai.agents._streaming import stream_ba_response
-        from odooai.agents.orchestrator import detect_domain, load_ba_profile
         from odooai.infrastructure.db.database import get_session
         from odooai.infrastructure.db.models import Conversation, Message
-        from odooai.knowledge.ba_factory import DOMAIN_NAMES
-
-        # Detect domain
-        domain = detect_domain(request.message) or "sales_crm"
-        domain_name = DOMAIN_NAMES.get(domain, "general")
-        yield _sse_event({"type": "domain", "content": domain_name})
 
         # Get or create conversation
         conversation_id = request.conversation_id
@@ -92,7 +85,6 @@ async def _stream_response(request: ChatRequest) -> Any:
                 if not conversation_id:
                     conv = Conversation(
                         title=request.message[:100],
-                        domain_id=domain,
                     )
                     session.add(conv)
                     await session.commit()
@@ -134,18 +126,12 @@ async def _stream_response(request: ChatRequest) -> Any:
             except Exception:
                 pass
 
-        # Load BA Profile
-        profile = load_ba_profile(domain, request.version)
-        if profile is None:
-            yield _sse_event({"type": "error", "content": f"BA Profile '{domain}' non disponible."})
-            return
-
-        # Stream response token by token
+        # Stream response — RAG handles context, no domain classification needed
         full_response = ""
         total_tokens = 0
         async for event in stream_ba_response(
             request.message,
-            profile,
+            None,  # No BA Profile — RAG provides context
             api_key,
             request.model,
             conversation_history=conversation_history,

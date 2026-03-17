@@ -67,11 +67,31 @@ class AutoQAPair(BaseModel, frozen=True):
     groupby: str = ""  # For read_group
 
 
+class ActionEffect(BaseModel, frozen=True):
+    """An effect detected in a method body — what the action DOES."""
+
+    type: str  # write, create, unlink, call, env_ref
+    target_model: str  # e.g. "stock.picking"
+    field: str = ""  # e.g. "state" for writes
+    value: str = ""  # e.g. "sale" for state writes
+    via_method: str = ""  # e.g. "_create_picking" for call chains
+
+
+class ActionFlow(BaseModel, frozen=True):
+    """Complete flow of an action — trigger + all effects."""
+
+    trigger_model: str  # e.g. "sale.order"
+    trigger_method: str  # e.g. "action_confirm"
+    effects: list[ActionEffect] = []
+    calls_methods: list[str] = []  # Methods called internally
+
+
 class BusinessSummary(BaseModel, frozen=True):
     """Complete business intelligence for a domain — extracted without LLM."""
 
     domain_id: str
     workflows: list[BusinessWorkflow] = []
+    action_flows: list[ActionFlow] = []
     dependency_graph: DependencyGraph = DependencyGraph()
     field_intents: list[FieldIntent] = []
     auto_qa: list[AutoQAPair] = []

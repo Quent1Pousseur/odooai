@@ -344,19 +344,13 @@ async def _exec_search_read(
     # Sanitize
     result = guarded_odoo_read(model, raw, fields, uid=uid)
 
-    # Format for LLM
+    # Format for LLM — return JSON for clean parsing
+    import json
+
     if not result.records:
-        return f"Aucun enregistrement trouve pour {model} avec ce filtre."
+        return f"No records found for {model} with this filter."
 
-    lines = [f"{len(result.records)} enregistrement(s) {model} :"]
-    for r in result.records:
-        parts = [f"{k}={v}" for k, v in r.items() if k != "id"]
-        lines.append(f"  - {', '.join(parts)}")
-
-    if result.was_anonymized:
-        lines.append("(Donnees anonymisees pour raisons de securite)")
-
-    return "\n".join(lines)
+    return json.dumps(result.records, ensure_ascii=False, default=str)
 
 
 async def _exec_search_count(
@@ -396,16 +390,13 @@ async def _exec_read_group(
     # Execute
     raw = await client.read_group(api_key, model, domain, fields, groupby, uid=uid)
 
-    # Format for LLM
+    # Format for LLM — return JSON
+    import json
+
     if not raw:
-        return f"Aucun resultat pour le regroupement {model}."
+        return f"No results for read_group on {model}."
 
-    lines = [f"{len(raw)} groupe(s) {model} :"]
-    for group in raw:
-        parts = [f"{k}={v}" for k, v in group.items() if not k.startswith("__")]
-        lines.append(f"  - {', '.join(parts)}")
-
-    return "\n".join(lines)
+    return json.dumps(raw, ensure_ascii=False, default=str)
 
 
 async def _exec_fields_get(
@@ -435,22 +426,23 @@ async def _exec_fields_get(
             return f"Le modele '{model}' n'existe pas sur cette instance."
         return f"Erreur: {error_str[:200]}"
 
-    if not isinstance(raw, dict):
-        return f"Impossible de lire les champs de {model}."
+    import json
 
-    lines = [f"Champs de {model} ({len(raw)} total) :"]
-    for fname, fdata in list(raw.items())[:30]:
+    if not isinstance(raw, dict):
+        return f"Model {model} not found or no fields available."
+
+    # Return compact JSON — field: {type, required, string}
+    compact: dict[str, dict[str, Any]] = {}
+    for fname, fdata in list(raw.items())[:40]:
         if fname.startswith("__"):
             continue
-        ftype = fdata.get("type", "?")
-        req = " *" if fdata.get("required") else ""
-        label = fdata.get("string", "")
-        lines.append(f"  {fname}: {ftype}{req} — {label}")
+        compact[fname] = {
+            "type": fdata.get("type", ""),
+            "required": fdata.get("required", False),
+            "string": fdata.get("string", ""),
+        }
 
-    if len(raw) > 30:
-        lines.append(f"  ... et {len(raw) - 30} autres champs")
-
-    return "\n".join(lines)
+    return json.dumps(compact, ensure_ascii=False)
 
 
 async def _exec_execute(

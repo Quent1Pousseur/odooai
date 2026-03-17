@@ -72,7 +72,7 @@ Question de l'utilisateur :
 
     messages: list[dict[str, Any]] = [{"role": "user", "content": user_message}]
     total_tokens = 0
-    max_token_budget = 50000  # Stop if token budget exceeded
+    max_token_budget = 50000
 
     # Tool-use loop
     tool_calls_made = 0

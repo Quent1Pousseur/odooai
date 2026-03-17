@@ -343,7 +343,9 @@ async def execute_tool(
         return f"Erreur: {user_msg[:200]}"
 
 
-def _normalize_records(records: list[dict[str, Any]] | tuple[dict[str, Any], ...]) -> list[dict[str, Any]]:
+def _normalize_records(
+    records: list[dict[str, Any]] | tuple[dict[str, Any], ...],
+) -> list[dict[str, Any]]:
     """Normalize Odoo records for clean LLM consumption.
 
     Converts Many2one [id, "name"] → {"id": id, "name": "name"}
@@ -556,13 +558,52 @@ async def _exec_execute(
     guarded_odoo_write_check(model, method)
 
     try:
-        result = await client.execute(
-            api_key,
-            model,
-            method,
-            raw_args,
-            uid=uid,
-        )
+        # Adapt args based on method
+        if method == "create":
+            # create expects: execute(model, "create", [], kwargs={vals: {...}})
+            vals = raw_args[0] if raw_args else {}
+            result = await client.execute(
+                api_key,
+                model,
+                method,
+                [],
+                uid=uid,
+                kwargs={"vals": vals},
+            )
+        elif method == "write":
+            # write expects: execute(model, "write", [ids], kwargs={vals: {...}})
+            ids = raw_args[0] if raw_args and isinstance(raw_args[0], list) else []
+            vals = raw_args[1] if len(raw_args) > 1 else {}
+            result = await client.execute(
+                api_key,
+                model,
+                method,
+                ids,
+                uid=uid,
+                kwargs={"vals": vals},
+            )
+        elif method == "copy":
+            # copy expects: execute(model, "copy", [id])
+            ids = raw_args[0] if raw_args and isinstance(raw_args[0], list) else raw_args[:1]
+            result = await client.execute(
+                api_key,
+                model,
+                method,
+                ids,
+                uid=uid,
+            )
+        else:
+            # Workflow methods: execute(model, "action_confirm", [id])
+            ids = raw_args[0] if raw_args and isinstance(raw_args[0], list) else raw_args
+            if not isinstance(ids, list):
+                ids = [ids] if ids else []
+            result = await client.execute(
+                api_key,
+                model,
+                method,
+                ids,
+                uid=uid,
+            )
         logger.info("Execute OK", model=model, method=method)
 
         # Format result based on method

@@ -37,10 +37,10 @@ def build_kg_summary(kgs: list[ModuleKnowledgeGraph]) -> str:
             # Selection fields — show the states/options
             for fname, f in model.fields.items():
                 if f.type == "selection" and isinstance(f.selection, list) and len(f.selection) > 0:
-                        opts = ", ".join(
-                            str(s[0]) if isinstance(s, list) else str(s) for s in f.selection[:8]
-                        )
-                        parts.append(f"  STATE {fname}: {opts}")
+                    opts = ", ".join(
+                        str(s[0]) if isinstance(s, list) else str(s) for s in f.selection[:8]
+                    )
+                    parts.append(f"  STATE {fname}: {opts}")
 
             # Top fields
             fields_meta = {
@@ -101,12 +101,28 @@ def build_ba_messages(
     language: str = "fr",
 ) -> list[dict[str, str]]:
     """Build the messages list for BA Profile generation LLM call."""
-    system = f"""Tu es un expert Odoo senior avec 10 ans d'experience.
-Tu analyses le code source d'un domaine Odoo et tu generes un profil
-d'intelligence business ACTIONNABLE pour les PME.
+    system = f"""Tu es un expert en REVERSE ENGINEERING business d'Odoo.
+
+Ton travail : transformer du CODE SOURCE en INTELLIGENCE BUSINESS.
+Odoo a ete cree pour repondre a des besoins business. Chaque modele,
+chaque champ, chaque contrainte, chaque workflow existe parce qu'un
+besoin business l'a demande. TON JOB est de retrouver ce besoin.
+
+Exemples de reverse engineering :
+- Un champ `state` avec ['draft','confirmed','done'] → c'est un workflow
+  de validation en 3 etapes. Le business a besoin de controler les etapes.
+- Une contrainte `CHECK(amount > 0)` → le business interdit les montants
+  negatifs pour eviter les erreurs de saisie.
+- Un champ `compute='_compute_margin'` → le business veut voir sa marge
+  en temps reel sans la calculer a la main.
+- Un `@api.onchange('partner_id')` → quand on change le client, le
+  systeme met a jour automatiquement l'adresse, les conditions, etc.
+- Un champ `tracking=True` → le business veut l'historique des changements
+  pour l'audit et la tracabilite.
 
 Tu connais les VRAIS workflows Odoo, les bonnes pratiques, les pieges.
-Tu sais comment les modules s'interconnectent.
+Tu sais POURQUOI chaque fonctionnalite existe — quel probleme business
+elle resout.
 
 Reponds en {language.upper()} uniquement.
 Format de sortie : JSON strict, pas de markdown, pas de commentaires."""

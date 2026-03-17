@@ -91,11 +91,14 @@ async def stream_ba_response(
             )
             history = recent_msgs
 
-        # Inject recent history — truncate long messages
+        # Inject recent history
         for msg in history:
             content = msg["content"]
-            if len(content) > 500:
-                content = content[:500] + "..."
+            # Truncate user messages (questions are short)
+            # Keep assistant messages longer (they contain IDs, data)
+            max_len = 200 if msg["role"] == "user" else 2000
+            if len(content) > max_len:
+                content = content[:max_len] + "..."
             messages.append({"role": msg["role"], "content": content})
     messages.append({"role": "user", "content": user_message})
     total_tokens = 0

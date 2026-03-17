@@ -31,10 +31,13 @@ export function OdooConnect({ onConnect, onDisconnect, isConnected }: OdooConnec
   if (isConnected) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs text-green-300">● Connecte</span>
+        <div className="flex items-center gap-1.5 bg-green-50 px-2.5 py-1 rounded-lg">
+          <div className="w-2 h-2 bg-success rounded-full" />
+          <span className="text-xs text-success font-medium">Connecte</span>
+        </div>
         <button
           onClick={onDisconnect}
-          className="text-xs text-white/70 hover:text-white underline"
+          className="text-xs text-text-muted hover:text-text transition-colors"
         >
           Deconnecter
         </button>
@@ -46,62 +49,75 @@ export function OdooConnect({ onConnect, onDisconnect, isConnected }: OdooConnec
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="text-xs bg-white/20 text-white px-3 py-1 rounded hover:bg-white/30 transition"
+        className="text-xs bg-primary/10 text-primary font-medium px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-all"
       >
         Connecter Odoo
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-primary mb-4">
-              Connexion a votre Odoo
-            </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md mx-4 animate-fadeIn">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+                  <path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-text">Connecter ton Odoo</h3>
+                <p className="text-xs text-text-muted">Tes donnees ne sont pas stockees</p>
+              </div>
+            </div>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">URL instance</label>
+                <label className="block text-xs font-medium text-text-light mb-1">URL</label>
                 <input
                   type="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://mon-odoo.com ou http://localhost:8069"
-                  className="w-full border rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-primary focus:outline-none"
+                  placeholder="https://mon-odoo.com"
+                  className="w-full bg-surface border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-text
+                             focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Base de donnees</label>
+                <label className="block text-xs font-medium text-text-light mb-1">Base de donnees</label>
                 <input
                   type="text"
                   value={db}
                   onChange={(e) => setDb(e.target.value)}
                   placeholder="ma-base"
-                  className="w-full border rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full bg-surface border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-text
+                             focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Login</label>
+                <label className="block text-xs font-medium text-text-light mb-1">Login</label>
                 <input
                   type="email"
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
                   placeholder="admin@monentreprise.com"
-                  className="w-full border rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-primary focus:outline-none"
+                  className="w-full bg-surface border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-text
+                             focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:outline-none transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Cle API</label>
+                <label className="block text-xs font-medium text-text-light mb-1">Cle API</label>
                 <input
                   type="password"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Votre cle API Odoo"
-                  className="w-full border rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-primary focus:outline-none"
+                  placeholder="Cle API Odoo"
+                  className="w-full bg-surface border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-text
+                             focus:ring-2 focus:ring-primary/20 focus:border-primary/40 focus:outline-none transition-all"
                 />
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-[11px] text-text-muted mt-1">
                   Odoo &gt; Parametres &gt; Utilisateurs &gt; Cles API
                 </p>
               </div>
@@ -110,22 +126,20 @@ export function OdooConnect({ onConnect, onDisconnect, isConnected }: OdooConnec
             <div className="flex gap-2 mt-5">
               <button
                 onClick={() => setIsOpen(false)}
-                className="flex-1 border border-gray-300 text-gray-600 py-2 rounded-lg text-sm hover:bg-gray-50"
+                className="flex-1 bg-surface text-text py-2.5 rounded-xl text-sm font-medium
+                           hover:bg-surface-hover transition-all"
               >
                 Annuler
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={!url || !db || !login || !apiKey}
-                className="flex-1 bg-primary text-white py-2 rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50"
+                className="flex-1 bg-primary text-white py-2.5 rounded-xl text-sm font-medium
+                           hover:bg-primary-600 disabled:opacity-40 transition-all"
               >
                 Connecter
               </button>
             </div>
-
-            <p className="text-xs text-gray-400 text-center mt-3">
-              🔒 Vos identifiants ne sont pas stockes — session uniquement.
-            </p>
           </div>
         </div>
       )}

@@ -23,6 +23,15 @@ interface ConversationItem {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+const QUICK_ACTIONS = [
+  { emoji: "📊", text: "Mon CA du mois", question: "Quel est mon chiffre d'affaires ce mois-ci ?" },
+  { emoji: "📦", text: "Stock critique", question: "Quels produits sont en rupture de stock ?" },
+  { emoji: "💰", text: "Factures en retard", question: "Combien de factures sont impayees ?" },
+  { emoji: "🚀", text: "Que puis-je ameliorer ?", question: "Qu'est-ce que je pourrais mieux faire avec Odoo ?" },
+  { emoji: "📋", text: "Commandes du jour", question: "Mes commandes du jour ?" },
+  { emoji: "⚡", text: "Challenge-moi", question: "Qu'est-ce que je fais a la main qu'Odoo pourrait automatiser ?" },
+];
+
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
@@ -156,14 +165,15 @@ export default function ChatPage() {
       />
 
       <div className="flex flex-col flex-1 min-w-0">
-        <header className="bg-primary text-white px-6 py-4 flex items-center justify-between shadow-md">
+        {/* Header — clean, minimal */}
+        <header className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-accent rounded-xl flex items-center justify-center text-primary font-bold text-sm">
-              AI
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-[10px]">AI</span>
             </div>
             <div>
-              <h1 className="text-lg font-semibold tracking-tight">OdooAI</h1>
-              <p className="text-xs text-white/60">Business Analyst intelligent</p>
+              <h1 className="text-sm font-semibold text-text">OdooAI</h1>
+              <p className="text-[11px] text-text-muted">Ton buddy Odoo</p>
             </div>
           </div>
           <OdooConnect
@@ -173,54 +183,75 @@ export default function ChatPage() {
           />
         </header>
 
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 bg-gray-50/50">
-          {messages.length === 0 && !isLoading && (
-            <div className="text-center mt-16">
-              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl text-primary font-bold">AI</span>
+        {/* Messages area */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+          <div className="max-w-3xl mx-auto space-y-4">
+            {/* Empty state — buddy welcome */}
+            {messages.length === 0 && !isLoading && (
+              <div className="text-center mt-12 animate-fadeIn">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                  <span className="text-3xl">👋</span>
+                </div>
+                <h2 className="text-xl font-semibold text-text">
+                  Salut ! Je suis ton buddy Odoo.
+                </h2>
+                <p className="text-sm text-text-light mt-2 max-w-lg mx-auto">
+                  Je connais chaque fonctionnalite d&apos;Odoo. Demande-moi tes chiffres,
+                  de la config, ou challenge-moi — je suis la pour t&apos;aider.
+                </p>
+
+                {/* Quick actions grid */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-8 max-w-xl mx-auto">
+                  {QUICK_ACTIONS.map((action) => (
+                    <button
+                      key={action.text}
+                      onClick={() => handleSend(action.question)}
+                      className="bg-white border border-gray-200 rounded-xl px-3 py-3
+                                 text-left hover:border-primary/30 hover:shadow-soft
+                                 transition-all group"
+                    >
+                      <span className="text-lg">{action.emoji}</span>
+                      <p className="text-xs font-medium text-text mt-1 group-hover:text-primary transition-colors">
+                        {action.text}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Connection hint */}
+                {!odooCreds && (
+                  <p className="text-xs text-text-muted mt-6">
+                    💡 Connecte ton Odoo pour des reponses personnalisees
+                  </p>
+                )}
               </div>
-              <p className="text-lg font-medium text-gray-700">Comment puis-je vous aider ?</p>
-              <p className="text-sm text-gray-400 mt-2 max-w-md mx-auto">
-                Posez une question sur votre Odoo — configuration, fonctionnalites cachees, optimisations.
-              </p>
-              <div className="flex flex-wrap justify-center gap-2 mt-6">
-                {[
-                  "Quelles fonctionnalites je n'utilise pas ?",
-                  "Comment optimiser mes stocks ?",
-                  "Mes relances sont-elles automatisees ?",
-                ].map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => handleSend(q)}
-                    className="text-xs bg-white border border-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:border-primary hover:text-primary transition-colors"
-                  >
-                    {q}
-                  </button>
-                ))}
+            )}
+
+            {/* Messages */}
+            {messages.map((msg, i) => (
+              <ChatMessage key={i} message={msg} />
+            ))}
+            {streamingText && (
+              <ChatMessage message={{ role: "assistant", content: streamingText }} isStreaming />
+            )}
+            {isLoading && !streamingText && (
+              <div className="flex items-center gap-3 animate-fadeIn">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-[10px]">AI</span>
+                </div>
+                <div className="bg-white shadow-card rounded-2xl px-4 py-3 flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  <span className="text-sm text-text-light">Je regarde...</span>
+                </div>
               </div>
-            </div>
-          )}
-          {messages.map((msg, i) => (
-            <ChatMessage key={i} message={msg} />
-          ))}
-          {streamingText && (
-            <ChatMessage message={{ role: "assistant", content: streamingText }} isStreaming />
-          )}
-          {isLoading && !streamingText && (
-            <div className="flex items-center gap-3 px-5 py-4 bg-white rounded-2xl border border-gray-100 shadow-sm max-w-[80%]">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <div className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-              </div>
-              <span className="text-sm text-gray-400">OdooAI reflechit...</span>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
-        <div className="text-xs text-gray-400 text-center px-4 py-1.5 bg-white border-t border-gray-100">
-          OdooAI ne fournit pas de conseil juridique, fiscal ou comptable.
+        {/* Disclaimer */}
+        <div className="text-[11px] text-text-muted text-center px-4 py-1">
+          OdooAI peut se tromper. Verifiez les informations importantes.
         </div>
 
         <ChatInput onSend={handleSend} isLoading={isLoading} />

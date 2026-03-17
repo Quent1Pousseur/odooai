@@ -267,22 +267,37 @@ def _call_with_retry(
 
 
 def _build_profile_context(profile: BAProfile) -> str:
-    """Build a SHORT context string from a BA Profile. Max ~500 tokens."""
+    """Build context from BA Profile — focused on Q&A and workflows."""
     parts: list[str] = [
         f"Domaine : {profile.domain_name}",
-        f"Modules Odoo : {', '.join(profile.modules_covered)}",
+        f"Modules : {', '.join(profile.modules_covered)}",
     ]
-    # Summary — max 200 chars
     if profile.summary:
-        summary = profile.summary[:200]
-        parts.append(f"Resume : {summary}")
-    # Top 5 feature discoveries only (most actionable)
+        parts.append(f"Resume : {profile.summary[:200]}")
+
+    # Q&A pairs — the most useful for the LLM
+    if profile.qa_pairs:
+        parts.append("\nQuestions types et comment y repondre :")
+        for qa in profile.qa_pairs[:7]:
+            models = ", ".join(qa.models_to_query) if qa.models_to_query else ""
+            fields = ", ".join(qa.fields_to_fetch) if qa.fields_to_fetch else ""
+            parts.append(f"  Q: {qa.question}")
+            if models:
+                parts.append(f"  → Modele: {models} | Champs: {fields}")
+            if qa.domain_filter_example:
+                parts.append(f"  → Filtre: {qa.domain_filter_example}")
+
+    # Workflows — help LLM understand how things connect
+    if profile.workflows:
+        parts.append("\nWorkflows :")
+        for w in profile.workflows[:3]:
+            steps = " → ".join(w.steps[:5]) if w.steps else ""
+            parts.append(f"  {w.name}: {steps}")
+
+    # Feature discoveries — short
     if profile.feature_discoveries:
-        parts.append("Fonctionnalites peu connues :")
+        parts.append("\nFonctionnalites peu connues :")
         for f in profile.feature_discoveries[:5]:
-            parts.append(f"  - {f.name}")
-    if profile.gotchas:
-        parts.append("Attention :")
-        for g in profile.gotchas[:3]:
-            parts.append(f"  - {g.description}")
+            parts.append(f"  - {f.name} ({f.how_to_activate})")
+
     return "\n".join(parts)

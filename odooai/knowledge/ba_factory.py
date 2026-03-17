@@ -18,6 +18,9 @@ from odooai.knowledge.schemas.ba_profile import (
     DomainCapability,
     FeatureDiscovery,
     Gotcha,
+    QAPair,
+    RecommendedConfig,
+    Workflow,
 )
 from odooai.knowledge.schemas.index import ModuleKnowledgeGraph
 
@@ -87,15 +90,30 @@ async def generate_ba_profile(
     logger.info("BA Profile generated", domain=domain_id, tokens=tokens)
 
     data = _parse_llm_json(raw_text)
+    # Parse recommended_config
+    rc_data = data.get("recommended_config", {})
+    rec_config = (
+        RecommendedConfig(
+            small_company=str(rc_data.get("small_company", "")),
+            medium_company=str(rc_data.get("medium_company", "")),
+            large_company=str(rc_data.get("large_company", "")),
+        )
+        if rc_data
+        else None
+    )
+
     return BAProfile(
         domain_name=domain_name,
         domain_id=domain_id,
         modules_covered=modules_covered,
         language=language,
         summary=data.get("summary", ""),
+        workflows=[_to_workflow(w) for w in data.get("workflows", [])],
         capabilities=[_to_capability(c) for c in data.get("capabilities", [])],
         feature_discoveries=[_to_feature(f) for f in data.get("feature_discoveries", [])],
+        qa_pairs=[_to_qa(q) for q in data.get("qa_pairs", [])],
         gotchas=[_to_gotcha(g) for g in data.get("gotchas", [])],
+        recommended_config=rec_config,
         cross_module_combos=data.get("cross_module_combos", []),
         limitations=data.get("limitations", []),
         odoo_version="17.0",
@@ -117,6 +135,26 @@ def _parse_llm_json(text: str) -> dict[str, Any]:
     except json.JSONDecodeError:
         logger.error("Failed to parse LLM JSON", text=cleaned[:500])
         return {}
+
+
+def _to_workflow(d: dict[str, Any]) -> Workflow:
+    return Workflow(
+        name=str(d.get("name", "")),
+        description=str(d.get("description", "")),
+        steps=d.get("steps", []),
+        models_involved=d.get("models_involved", []),
+        key_fields_per_step=d.get("key_fields_per_step", {}),
+    )
+
+
+def _to_qa(d: dict[str, Any]) -> QAPair:
+    return QAPair(
+        question=str(d.get("question", "")),
+        answer=str(d.get("answer", "")),
+        models_to_query=d.get("models_to_query", []),
+        fields_to_fetch=d.get("fields_to_fetch", []),
+        domain_filter_example=str(d.get("domain_filter_example", "")),
+    )
 
 
 def _to_capability(d: dict[str, Any]) -> DomainCapability:

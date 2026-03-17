@@ -41,6 +41,34 @@ class Gotcha(BaseModel, frozen=True):
     workaround: str = ""  # How to avoid the issue
 
 
+class Workflow(BaseModel, frozen=True):
+    """A business workflow with steps and models involved."""
+
+    name: str  # e.g. "Cycle de vente"
+    description: str  # Business explanation
+    steps: list[str] = []  # Ordered steps
+    models_involved: list[str] = []  # Odoo models in this workflow
+    key_fields_per_step: dict[str, list[str]] = {}  # model → [fields]
+
+
+class QAPair(BaseModel, frozen=True):
+    """A typical question with the exact Odoo query to answer it."""
+
+    question: str  # e.g. "Combien de commandes en retard ?"
+    answer: str  # Direct answer template
+    models_to_query: list[str] = []  # Which models to search
+    fields_to_fetch: list[str] = []  # Which fields to return
+    domain_filter_example: str = ""  # e.g. "[('state','=','draft')]"
+
+
+class RecommendedConfig(BaseModel, frozen=True):
+    """Configuration recommendations by company size."""
+
+    small_company: str = ""  # < 20 employees
+    medium_company: str = ""  # 20-100 employees
+    large_company: str = ""  # > 100 employees
+
+
 class BAProfile(BaseModel, frozen=True):
     """
     Business Analyst Profile for a functional domain.
@@ -49,23 +77,26 @@ class BAProfile(BaseModel, frozen=True):
     Used by the Orchestrator to answer business questions.
     """
 
-    domain_name: str  # e.g. "Sales & CRM"
-    domain_id: str  # e.g. "sales_crm"
-    modules_covered: list[str]  # e.g. ["sale", "crm", "sale_management"]
-    language: str = "fr"  # Output language
+    domain_name: str
+    domain_id: str
+    modules_covered: list[str]
+    language: str = "fr"
 
     # Business intelligence
-    summary: str  # 2-3 sentence overview of the domain
-    capabilities: list[DomainCapability] = []  # What the domain can do
-    feature_discoveries: list[FeatureDiscovery] = []  # Hidden gems to reveal
-    gotchas: list[Gotcha] = []  # Pitfalls and constraints
+    summary: str
+    workflows: list[Workflow] = []  # How things flow
+    capabilities: list[DomainCapability] = []
+    feature_discoveries: list[FeatureDiscovery] = []
+    qa_pairs: list[QAPair] = []  # Q&A with exact Odoo queries
+    gotchas: list[Gotcha] = []
+    recommended_config: RecommendedConfig | None = None
 
     # Cross-module intelligence
-    cross_module_combos: list[str] = []  # e.g. "sale + stock = auto-delivery"
-    limitations: list[str] = []  # What requires custom dev
+    cross_module_combos: list[str] = []
+    limitations: list[str] = []
 
     # Metadata
     odoo_version: str = ""
-    generated_at: str = ""  # ISO datetime
-    model_used: str = ""  # LLM model that generated this
-    token_count: int = 0  # Tokens used for generation
+    generated_at: str = ""
+    model_used: str = ""
+    token_count: int = 0

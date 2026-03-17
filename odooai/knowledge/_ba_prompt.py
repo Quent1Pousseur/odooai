@@ -1,6 +1,7 @@
 """
 Module: knowledge/_ba_prompt.py
 Role: Build prompts for BA Profile generation.
+      V2: enriched with workflows, Q&A, field hints.
 Dependencies: knowledge schemas
 """
 
@@ -14,8 +15,8 @@ def build_kg_summary(kgs: list[ModuleKnowledgeGraph]) -> str:
     """
     Build a concise summary of Knowledge Graphs for LLM consumption.
 
-    Extracts the most important information: models, key fields,
-    actions, constraints. Targets ~2000-3000 tokens.
+    Extracts: models, key fields, actions, constraints, onchange, compute.
+    Targets ~2000-3000 tokens.
     """
     parts: list[str] = []
 
@@ -33,6 +34,15 @@ def build_kg_summary(kgs: list[ModuleKnowledgeGraph]) -> str:
             if model.description:
                 parts.append(f"Description: {model.description}")
 
+            # Selection fields — show the states/options
+            for fname, f in model.fields.items():
+                if f.type == "selection" and isinstance(f.selection, list) and len(f.selection) > 0:
+                        opts = ", ".join(
+                            str(s[0]) if isinstance(s, list) else str(s) for s in f.selection[:8]
+                        )
+                        parts.append(f"  STATE {fname}: {opts}")
+
+            # Top fields
             fields_meta = {
                 f.name: {"type": f.type, "required": f.required} for f in model.fields.values()
             }
@@ -46,22 +56,38 @@ def build_kg_summary(kgs: list[ModuleKnowledgeGraph]) -> str:
                 if f.required:
                     extras.append("required")
                 if f.compute:
-                    extras.append("computed")
+                    extras.append(f"compute={f.compute}")
                 if f.relation:
                     extras.append(f"-> {f.relation}")
+                if f.related:
+                    extras.append(f"related={f.related}")
                 info = f" ({', '.join(extras)})" if extras else ""
                 parts.append(f"  - {fname}: {f.type}{info}")
 
             parts.append("")
 
+        # Actions — include all, they tell the story
         if kg.action_methods:
-            action_names = [a.name for a in kg.action_methods[:10]]
-            parts.append(f"Actions: {', '.join(action_names)}")
+            parts.append("Actions:")
+            for a in kg.action_methods[:15]:
+                parts.append(f"  - {a.model}.{a.name}")
+
+        # Onchange methods
+        if kg.onchange_methods:
+            parts.append("Onchange:")
+            for o in kg.onchange_methods[:10]:
+                parts.append(f"  - {o.method_name} (fields: {o.fields})")
+
+        # Constraints
+        if kg.python_constraints:
+            parts.append("Constraints Python:")
+            for c in kg.python_constraints[:5]:
+                parts.append(f"  - {c.method_name}: fields={c.fields}")
 
         if kg.sql_constraints:
-            parts.append(f"SQL Constraints: {len(kg.sql_constraints)}")
-            for c in kg.sql_constraints[:5]:
-                parts.append(f"  - {c.name}: {c.message}")
+            parts.append("Constraints SQL:")
+            for sc in kg.sql_constraints[:5]:
+                parts.append(f"  - {sc.name}: {sc.message}")
 
         parts.append("")
 
@@ -75,61 +101,100 @@ def build_ba_messages(
     language: str = "fr",
 ) -> list[dict[str, str]]:
     """Build the messages list for BA Profile generation LLM call."""
-    system = f"""Tu es un Business Analyst expert Odoo. Tu analyses le schema technique
-d'un domaine fonctionnel et tu produis un profil d'intelligence business.
+    system = f"""Tu es un expert Odoo senior avec 10 ans d'experience.
+Tu analyses le code source d'un domaine Odoo et tu generes un profil
+d'intelligence business ACTIONNABLE pour les PME.
 
-Ton objectif : aider les PME a decouvrir les fonctionnalites qu'elles n'utilisent pas.
+Tu connais les VRAIS workflows Odoo, les bonnes pratiques, les pieges.
+Tu sais comment les modules s'interconnectent.
 
 Reponds en {language.upper()} uniquement.
 Format de sortie : JSON strict, pas de markdown, pas de commentaires."""
 
-    user = f"""Voici le schema technique du domaine "{domain_name}" extrait du code source Odoo :
+    user = f"""Voici le schema technique du domaine "{domain_name}"
+extrait du code source Odoo 17 :
 
 {kg_summary}
 
-Genere un BA Profile JSON avec cette structure exacte :
+Genere un BA Profile JSON ENRICHI avec cette structure :
 {{
-  "domain_name": "{domain_name}",
-  "domain_id": "{domain_id}",
-  "summary": "2-3 phrases resumant ce que ce domaine permet de faire pour une PME",
+  "summary": "3 phrases : ce que ce domaine fait, pour qui, la valeur business",
+
+  "workflows": [
+    {{
+      "name": "Nom du workflow (ex: Cycle de vente)",
+      "description": "Explication business en 2 phrases",
+      "steps": ["Etape 1 : ...", "Etape 2 : ...", "..."],
+      "models_involved": ["sale.order", "stock.picking", "account.move"],
+      "key_fields_per_step": {{
+        "sale.order": ["state", "partner_id", "amount_total"],
+        "stock.picking": ["state", "scheduled_date"]
+      }}
+    }}
+  ],
+
   "capabilities": [
     {{
       "name": "Nom de la capacite",
-      "description": "Description business (pas technique)",
-      "key_models": ["modele1", "modele2"],
-      "common_workflows": ["workflow1", "workflow2"]
+      "description": "Description business (PAS technique)",
+      "key_models": ["modele1"],
+      "common_workflows": ["workflow1"]
     }}
   ],
+
   "feature_discoveries": [
     {{
-      "name": "Nom de la fonctionnalite cachee",
+      "name": "Fonctionnalite peu connue",
       "module": "nom_module",
       "model": "nom.modele",
       "field_or_setting": "nom_champ_ou_config",
-      "description": "Ce que ca fait",
-      "business_value": "Pourquoi c'est utile pour la PME",
-      "how_to_activate": "Comment l'activer en langage simple",
-      "prerequisites": ["prerequis1"],
+      "description": "Ce que ca fait concretement",
+      "business_value": "Impact business mesurable",
+      "how_to_activate": "Menu > Sous-menu > Option exacte",
+      "prerequisites": ["prerequis"],
       "complexity": "simple|medium|complex"
     }}
   ],
-  "gotchas": [
+
+  "qa_pairs": [
     {{
-      "description": "Piege ou contrainte",
-      "source_model": "modele",
-      "source_constraint": "contrainte",
-      "workaround": "Comment eviter le probleme"
+      "question": "Question typique d'un gerant PME",
+      "answer": "Reponse directe avec les modeles et champs a interroger",
+      "models_to_query": ["modele1"],
+      "fields_to_fetch": ["field1", "field2"],
+      "domain_filter_example": "[('state','=','draft')]"
     }}
   ],
-  "cross_module_combos": ["combo1: explication"],
+
+  "gotchas": [
+    {{
+      "description": "Piege courant",
+      "source_model": "modele",
+      "source_constraint": "contrainte",
+      "workaround": "Comment eviter"
+    }}
+  ],
+
+  "recommended_config": {{
+    "small_company": "Config recommandee pour < 20 employes",
+    "medium_company": "Config recommandee pour 20-100 employes",
+    "large_company": "Config recommandee pour > 100 employes"
+  }},
+
+  "cross_module_combos": ["Module A + Module B : explication de la synergie"],
   "limitations": ["limitation1"]
 }}
 
-Genere au moins 5 feature_discoveries (les plus utiles pour une PME).
-Genere au moins 3 gotchas (les pieges les plus frequents).
-Sois concret et actionnable. Pas de generalites."""
+IMPORTANT :
+- Genere au moins 3 workflows DETAILLES avec les etapes et modeles
+- Genere au moins 10 qa_pairs (les questions les plus courantes)
+- Genere au moins 7 feature_discoveries ACTIONNABLES
+- Genere au moins 5 gotchas
+- Les qa_pairs DOIVENT inclure les modeles et champs exacts a interroger
+- Les workflows DOIVENT montrer les interdependances entre modules
+- Sois CONCRET : noms de menus, noms de champs, pas de generalites"""
 
     return [
-        {"role": "system", "content": system},  # Extracted separately by caller
+        {"role": "system", "content": system},
         {"role": "user", "content": user},
     ]

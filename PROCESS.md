@@ -85,19 +85,75 @@ Tout le monde le lit. Personne n'y deroge.
 | Legal (CGU, LGPL, DPA) | docs/business/legal/ |
 | Competitive analysis | docs/business/competitive-analysis.md |
 | **Technique** | |
-| Backup/DR | docs/technical/backup-dr-plan.md |
-| Eval framework | docs/technical/eval-framework-v1.md |
-| Game day | docs/technical/game-day-1.md |
+| Backup/DR | docs/technical/backup-dr.md |
+| Eval framework | docs/technical/eval-framework.md |
+| Game day | docs/technical/game-day.md |
 | OpenAPI | docs/technical/openapi.json |
 | **Autres** | |
-| Learning reports | learning/sprintN/ |
-| Projets R&D | rnd/ |
-| Meetings | meetings/ (daily, weekly, retro, kickoff, team-building, hr, archive) |
+| Learning reports | docs/learning/sprintN/ |
+| Projets R&D | docs/rnd/ |
+| Meetings sessions | docs/meetings/sessions/ |
+| Meetings retros | docs/meetings/retros/ |
+| Meetings kickoffs | docs/meetings/kickoffs/ |
+| Meetings archive | docs/meetings/archive/ |
+| Team buildings | docs/hr/team-building/ |
+| Templates | **docs/TEMPLATES.md** |
 | Scripts | scripts/ |
 
 ---
 
-## 4. Escalade
+## 4. Que faire quand je n'ai pas de tache ?
+
+**Cascade — dans cet ordre :**
+
+```
+1. Tache directe ?     → OUI → travailler dessus
+                       → NON ↓
+2. Aider un collegue ? → OUI → pair programming, review, support
+                       → NON ↓
+3. Projet R&D ?        → OUI → avancer le projet (docs/rnd/NN-projet.md)
+                       → NON ↓
+4. Se former           → Choisir un sujet utile au projet
+                         Produire un CR (docs/learning/sprintN/NN-sujet.md)
+                         Presenter au partage learning en fin de session
+```
+
+**R&D passe AVANT la formation.** Un agent avec un projet R&D actif n'a pas besoin de faire de learning.
+
+**Exemples de projets R&D :** prototyper une feature, tester un outil, benchmarker une technologie, creer un POC.
+
+**Exemples de formation :** etudier un pattern, lire une doc, analyser un concurrent, apprendre un framework.
+
+**Regle** : a la fin de chaque session, l'agent a produit soit du code, soit une review, soit un avancement R&D, soit un CR de formation. JAMAIS rien.
+
+---
+
+## 5. Comment creer un fichier
+
+**Tout fichier suit le template de son type.** Voir `docs/TEMPLATES.md`.
+
+| Type | Chemin | Nommage |
+|------|--------|---------|
+| Spec | docs/specs/ | `ODAI-XXX-NNN-nom.md` |
+| Review | docs/reviews/ | `ODAI-XXX-NNN-review.md` |
+| Session | docs/meetings/sessions/ | `YYYY-MM-DD-session-N.md` |
+| Session EOD | docs/meetings/sessions/ | `YYYY-MM-DD-session-N-eod.md` |
+| Retro | docs/meetings/retros/ | `YYYY-MM-DD-sprint-N.md` |
+| Kickoff | docs/meetings/kickoffs/ | `YYYY-MM-DD-sprint-N.md` |
+| Learning | docs/learning/sprintN/ | `NN-sujet.md` |
+| R&D | docs/rnd/ | `NN-nom-projet.md` |
+| Business | docs/business/ | `nom-descriptif.md` |
+| Legal | docs/business/legal/ | `nom-descriptif.md` |
+| Marketing | docs/business/marketing/ | `nom-descriptif.md` |
+| Technique | docs/technical/ | `nom-descriptif.md` |
+| HR | docs/hr/ | `nom-descriptif.md` |
+| Governance | docs/governance/ | `nom-descriptif.md` |
+
+**Convention** : tout en minuscules, kebab-case, pas de v1/draft/final (git gere les versions).
+
+---
+
+## 6. Escalade
 
 | Situation | Qui escalade | Vers qui | Delai |
 |-----------|-------------|----------|-------|

@@ -38,6 +38,7 @@ export default function ChatPage() {
   const [currentConversationId, setCurrentConversationId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [toolStatus, setToolStatus] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [odooCreds, setOdooCreds] = useState<{url: string; db: string; login: string; apiKey: string} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -116,15 +117,17 @@ export default function ChatPage() {
             if (data.type === "text") {
               fullText += data.content;
               setStreamingText(fullText);
+              setToolStatus("");  // Clear tool status when text arrives
             } else if (data.type === "domain") {
               domain = data.content;
             } else if (data.type === "conversation_id") {
               setCurrentConversationId(data.content);
             } else if (data.type === "tool_start") {
               const msg = data.message || "Recherche en cours";
-              const model = data.model ? ` (${data.model})` : "";
-              fullText += `\n> ${msg}${model}...\n\n`;
-              setStreamingText(fullText);
+              const model = data.model ? ` · ${data.model}` : "";
+              setToolStatus(`${msg}${model}`);
+            } else if (data.type === "tool_end") {
+              setToolStatus("");
             } else if (data.type === "done") {
               tokens = data.tokens || 0;
               sources = data.sources || [];
@@ -150,6 +153,7 @@ export default function ChatPage() {
     } finally {
       setIsLoading(false);
       setStreamingText("");
+      setToolStatus("");
     }
   };
 
@@ -241,8 +245,17 @@ export default function ChatPage() {
                 </div>
                 <div className="bg-white shadow-card rounded-2xl px-4 py-3 flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                  <span className="text-sm text-text-light">Je regarde...</span>
+                  <span className="text-sm text-text-light">
+                    {toolStatus || "Je regarde..."}
+                  </span>
                 </div>
+              </div>
+            )}
+            {/* Tool status during streaming — single bubble that auto-updates */}
+            {toolStatus && streamingText && (
+              <div className="flex items-center gap-2 px-3 py-2 animate-fadeIn">
+                <div className="w-3 h-3 border-2 border-accent/50 border-t-accent rounded-full animate-spin" />
+                <span className="text-xs text-accent-600">{toolStatus}...</span>
               </div>
             )}
             <div ref={messagesEndRef} />

@@ -100,6 +100,24 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "required": ["model", "domain", "groupby", "fields"],
         },
     },
+    {
+        "name": "odoo_fields_get",
+        "description": (
+            "Get the list of fields available on an Odoo model. "
+            "Use this BEFORE search_read if you are not sure which fields exist. "
+            "Returns field names with their types."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "model": {
+                    "type": "string",
+                    "description": "Odoo model technical name (e.g. 'sale.order')",
+                },
+            },
+            "required": ["model"],
+        },
+    },
 ]
 
 
@@ -185,6 +203,8 @@ async def execute_tool(
             return await _exec_search_count(tool_input, odoo_client, uid, api_key)
         if tool_name == "odoo_read_group":
             return await _exec_read_group(tool_input, odoo_client, uid, api_key)
+        if tool_name == "odoo_fields_get":
+            return await _exec_fields_get(tool_input, odoo_client, uid, api_key)
         return f"Unknown tool: {tool_name}"
     except Exception as exc:
         error_str = str(exc)
@@ -288,5 +308,50 @@ async def _exec_read_group(
     for group in raw:
         parts = [f"{k}={v}" for k, v in group.items() if not k.startswith("__")]
         lines.append(f"  - {', '.join(parts)}")
+
+    return "\n".join(lines)
+
+
+async def _exec_fields_get(
+    inp: dict[str, Any],
+    client: IOdooClient,
+    uid: int,
+    api_key: str,
+) -> str:
+    """Execute odoo_fields_get — list available fields on a model."""
+    model = str(inp.get("model", ""))
+
+    # Guardian gate
+    guarded_odoo_write_check(model, "fields_get")
+
+    try:
+        raw = await client.execute(
+            api_key,
+            model,
+            "fields_get",
+            [],
+            uid=uid,
+            kwargs={"attributes": ["string", "type", "required"]},
+        )
+    except Exception as exc:
+        error_str = str(exc)
+        if "doesn't exist" in error_str:
+            return f"Le modele '{model}' n'existe pas sur cette instance."
+        return f"Erreur: {error_str[:200]}"
+
+    if not isinstance(raw, dict):
+        return f"Impossible de lire les champs de {model}."
+
+    lines = [f"Champs de {model} ({len(raw)} total) :"]
+    for fname, fdata in list(raw.items())[:30]:
+        if fname.startswith("__"):
+            continue
+        ftype = fdata.get("type", "?")
+        req = " *" if fdata.get("required") else ""
+        label = fdata.get("string", "")
+        lines.append(f"  {fname}: {ftype}{req} — {label}")
+
+    if len(raw) > 30:
+        lines.append(f"  ... et {len(raw) - 30} autres champs")
 
     return "\n".join(lines)

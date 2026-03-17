@@ -130,7 +130,7 @@ async def ask_ba_agent(
 
     from odooai.agents._tools import TOOL_DEFINITIONS, execute_tool
 
-    context = _build_profile_context(profile)
+    context = _build_profile_context(profile, question=question)
     user_message = f"""Contexte du domaine "{profile.domain_name}" :
 
 {context}
@@ -274,8 +274,8 @@ def _call_with_retry(
                 raise
 
 
-def _build_profile_context(profile: BAProfile) -> str:
-    """Build context from BA Profile — focused on Q&A and workflows."""
+def _build_profile_context(profile: BAProfile, question: str = "") -> str:
+    """Build context from BA Profile — targeted to the question."""
     parts: list[str] = [
         f"Domaine : {profile.domain_name}",
         f"Modules : {', '.join(profile.modules_covered)}",
@@ -283,10 +283,23 @@ def _build_profile_context(profile: BAProfile) -> str:
     if profile.summary:
         parts.append(f"Resume : {profile.summary[:200]}")
 
-    # Q&A pairs — the most useful for the LLM
+    # Q&A pairs — filter by relevance to the question
     if profile.qa_pairs:
+        relevant_qa = profile.qa_pairs
+        if question:
+            q_lower = question.lower()
+            scored = []
+            for qa in profile.qa_pairs:
+                # Simple keyword overlap scoring
+                qa_words = set(qa.question.lower().split())
+                q_words = set(q_lower.split())
+                score = len(qa_words & q_words)
+                scored.append((score, qa))
+            scored.sort(key=lambda x: x[0], reverse=True)
+            relevant_qa = [qa for _, qa in scored[:5]]
+
         parts.append("\nQuestions types et comment y repondre :")
-        for qa in profile.qa_pairs[:7]:
+        for qa in relevant_qa:
             models = ", ".join(qa.models_to_query) if qa.models_to_query else ""
             fields = ", ".join(qa.fields_to_fetch) if qa.fields_to_fetch else ""
             parts.append(f"  Q: {qa.question}")

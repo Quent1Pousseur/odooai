@@ -39,6 +39,7 @@ async def stream_ba_response(
     odoo_uid: int = 0,
     odoo_api_key: str = "",
     max_tools: int = 10,
+    conversation_history: list[dict[str, str]] | None = None,
 ) -> AsyncGenerator[dict[str, Any], None]:
     """
     Stream BA Agent response as events.
@@ -47,7 +48,7 @@ async def stream_ba_response(
     """
     import anthropic
 
-    context = _build_profile_context(profile)
+    context = _build_profile_context(profile, question=question)
     user_message = f"""Contexte du domaine "{profile.domain_name}" :
 
 {context}
@@ -57,7 +58,43 @@ Question de l'utilisateur :
 
     client = anthropic.Anthropic(api_key=anthropic_api_key)
     tools = TOOL_DEFINITIONS if odoo_client is not None else []
-    messages: list[dict[str, Any]] = [{"role": "user", "content": user_message}]
+
+    # Build messages with conversation history
+    messages: list[dict[str, Any]] = []
+    if conversation_history:
+        history = conversation_history
+        # If history is long, summarize the old part and keep recent messages
+        if len(history) > 6:
+            old_msgs = history[:-4]
+            recent_msgs = history[-4:]
+            # Create a summary of old messages
+            summary_parts = []
+            for msg in old_msgs:
+                role = "User" if msg["role"] == "user" else "Buddy"
+                text = msg["content"][:100]
+                summary_parts.append(f"{role}: {text}")
+            summary = "\n".join(summary_parts)
+            messages.append(
+                {
+                    "role": "user",
+                    "content": f"[Resume de la conversation precedente :\n{summary}\n]",
+                }
+            )
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": "Compris, je continue la conversation.",
+                }
+            )
+            history = recent_msgs
+
+        # Inject recent history — truncate long messages
+        for msg in history:
+            content = msg["content"]
+            if len(content) > 500:
+                content = content[:500] + "..."
+            messages.append({"role": msg["role"], "content": content})
+    messages.append({"role": "user", "content": user_message})
     total_tokens = 0
     tool_calls_made = 0
     max_budget = 50000

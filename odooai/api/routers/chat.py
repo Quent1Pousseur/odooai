@@ -113,6 +113,27 @@ async def _stream_response(request: ChatRequest) -> Any:
 
         yield _sse_event({"type": "conversation_id", "content": conversation_id})
 
+        # Load conversation history (last 10 messages for context)
+        conversation_history: list[dict[str, str]] = []
+        if conversation_id:
+            try:
+                async for session in get_session():
+                    from sqlalchemy import select
+
+                    result = await session.execute(
+                        select(Message)
+                        .where(Message.conversation_id == conversation_id)
+                        .order_by(Message.created_at.desc())
+                        .limit(10),
+                    )
+                    history_msgs = list(reversed(result.scalars().all()))
+                    # Exclude the current user message (already added above)
+                    for m in history_msgs[:-1]:
+                        conversation_history.append({"role": m.role, "content": m.content})
+                    break
+            except Exception:
+                pass
+
         # Load BA Profile
         profile = load_ba_profile(domain, request.version)
         if profile is None:
@@ -127,6 +148,7 @@ async def _stream_response(request: ChatRequest) -> Any:
             profile,
             api_key,
             request.model,
+            conversation_history=conversation_history,
             odoo_client=odoo_client,
             odoo_uid=odoo_uid,
             odoo_api_key=real_odoo_api_key,

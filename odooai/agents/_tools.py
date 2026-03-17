@@ -187,14 +187,24 @@ async def execute_tool(
             return await _exec_read_group(tool_input, odoo_client, uid, api_key)
         return f"Unknown tool: {tool_name}"
     except Exception as exc:
-        user_msg = getattr(exc, "user_message", str(exc))
+        error_str = str(exc)
+        user_msg = getattr(exc, "user_message", error_str)
         logger.warning(
             "Tool execution failed",
             tool=tool_name,
             error=user_msg,
             input=str(tool_input)[:200],
         )
-        return f"Erreur: {user_msg}"
+        # Give the LLM useful info to retry with different params
+        if "Invalid field" in error_str:
+            return (
+                f"Erreur: champ invalide dans la requete. "
+                f"Essaie avec moins de champs ou un filtre different. "
+                f"Detail: {error_str.split('ValueError: ')[-1][:150]}"
+            )
+        if "access" in error_str.lower() or "permission" in error_str.lower():
+            return "Erreur: acces refuse a ce modele. Essaie un autre modele."
+        return f"Erreur: {user_msg[:200]}"
 
 
 async def _exec_search_read(

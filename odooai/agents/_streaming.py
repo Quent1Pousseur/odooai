@@ -13,7 +13,7 @@ from typing import Any
 import structlog
 
 from odooai.agents._tools import TOOL_DEFINITIONS, execute_tool
-from odooai.agents.ba_agent import DISCLAIMER, SYSTEM_PROMPT, _build_profile_context
+from odooai.agents.ba_agent import DISCLAIMER, SYSTEM_PROMPT
 from odooai.knowledge.schemas.ba_profile import BAProfile
 
 logger = structlog.get_logger(__name__)
@@ -51,15 +51,16 @@ async def stream_ba_response(
     client = anthropic.Anthropic(api_key=anthropic_api_key)
     tools = TOOL_DEFINITIONS if odoo_client is not None else []
 
-    # Only inject BA context when NOT connected (no tools)
-    if tools:
-        user_message = question
-    else:
-        context = _build_profile_context(profile, question=question)
-        user_message = f"""Contexte Odoo :
-{context}
+    # RAG context injection — retrieve relevant chunks
+    rag_context = ""
+    try:
+        from odooai.knowledge.rag import get_context_for_question
 
-{question}"""
+        rag_context = get_context_for_question(question, n_results=5)
+    except Exception:
+        pass  # RAG not built yet — continue without
+
+    user_message = f"{rag_context}\n\n{question}" if rag_context else question
 
     # Build messages with conversation history
     messages: list[dict[str, Any]] = []

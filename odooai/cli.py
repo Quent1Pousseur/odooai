@@ -55,6 +55,10 @@ def main(argv: list[str] | None = None) -> None:
     p_ba.add_argument("--model", default="claude-sonnet-4-20250514", help="LLM model")
     p_ba.add_argument("--save", action="store_true", help="Save BA Profile to knowledge_store/")
 
+    # build-rag: build the RAG vector index
+    p_rag = sub.add_parser("build-rag", help="Build RAG index from Knowledge Graphs + BA Profiles")
+    p_rag.add_argument("--version-tag", default="17.0", help="Odoo version (default: 17.0)")
+
     # chat: interactive chat with OdooAI
     p_chat = sub.add_parser("chat", help="Chat with OdooAI (ask questions about Odoo)")
     p_chat.add_argument("--url", default="", help="Odoo instance URL for live connection")
@@ -76,6 +80,8 @@ def main(argv: list[str] | None = None) -> None:
         _cmd_analyze_all(args)
     elif args.command == "generate-ba":
         _cmd_generate_ba(args)
+    elif args.command == "build-rag":
+        _cmd_build_rag(args)
     elif args.command == "chat":
         _cmd_chat(args)
     elif args.command == "check-kg":
@@ -154,6 +160,15 @@ def _cmd_chat(args: argparse.Namespace) -> None:
         except Exception as exc:
             err_type = type(exc).__name__
             print(f"\nErreur ({err_type}): impossible de generer la reponse.\n", file=sys.stderr)
+
+
+def _cmd_build_rag(args: argparse.Namespace) -> None:
+    """Build the RAG vector index."""
+    from odooai.knowledge.rag import build_rag_index
+
+    print(f"Building RAG index for version {args.version_tag}...")
+    stats = build_rag_index(version=args.version_tag)
+    print(f"Done: {stats['chunks']} chunks from {stats['modules']} modules")
 
 
 def _cmd_generate_ba(args: argparse.Namespace) -> None:

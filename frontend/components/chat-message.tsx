@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Message {
   role: "user" | "assistant";
@@ -57,6 +58,7 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
           ) : (
             <div className="text-sm leading-relaxed">
               <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
                 components={{
                   h1: ({ children }) => (
                     <h1 className="text-base font-bold text-text mt-4 mb-2 first:mt-0">{children}</h1>

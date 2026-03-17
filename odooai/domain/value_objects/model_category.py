@@ -51,22 +51,14 @@ class ModelClassifier:
 
     _SENSITIVE: frozenset[str] = frozenset(
         {
-            "account.move",
-            "account.payment",
-            "account.bank.statement",
             "hr.payslip",
             "hr.contract",
             "hr.employee",
-            "res.partner",
             "mail.message",
-            "base.automation",
-            "ir.actions.server",
-            "ir.module.module",
-            "ir.ui.view",
         }
     )
 
-    _SENSITIVE_PREFIXES: tuple[str, ...] = ("account.", "hr.")
+    _SENSITIVE_PREFIXES: tuple[str, ...] = ("hr.payslip", "hr.contract")
 
     _OPEN: frozenset[str] = frozenset(
         {

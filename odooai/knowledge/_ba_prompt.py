@@ -1,95 +1,93 @@
 """
 Module: knowledge/_ba_prompt.py
 Role: Build prompts for BA Profile generation.
-      V2: enriched with workflows, Q&A, field hints.
-Dependencies: knowledge schemas
+      V3: uses Business Extractor for pre-digested intelligence.
+Dependencies: knowledge schemas, business_extractor
 """
 
 from __future__ import annotations
 
+from odooai.knowledge.business_extractor import extract_business
 from odooai.knowledge.schemas.index import ModuleKnowledgeGraph
 from odooai.services.field_scorer import select_top_fields
 
 
-def build_kg_summary(kgs: list[ModuleKnowledgeGraph]) -> str:
+def build_kg_summary(kgs: list[ModuleKnowledgeGraph], domain_id: str = "") -> str:
     """
-    Build a concise summary of Knowledge Graphs for LLM consumption.
+    Build a BUSINESS-ORIENTED summary of KGs for LLM consumption.
 
-    Extracts: models, key fields, actions, constraints, onchange, compute.
-    Targets ~2000-3000 tokens.
+    Uses the Business Extractor to pre-digest intelligence (0 tokens).
+    The LLM receives structured business data, not raw field lists.
     """
+    # Phase 1: extract business intelligence (Python, 0 tokens)
+    biz = extract_business(kgs, domain_id)
+
     parts: list[str] = []
 
-    for kg in kgs:
-        parts.append(f"## Module: {kg.manifest.name} ({kg.manifest.technical_name})")
-        parts.append(f"Depends: {', '.join(kg.manifest.depends)}")
+    # Workflows — the most valuable info
+    if biz.workflows:
+        parts.append("=== WORKFLOWS ===")
+        for wf in biz.workflows:
+            states = " → ".join(wf.states) if wf.states else "unknown"
+            parts.append(f"{wf.model}: {states}")
+            for t in wf.transitions:
+                parts.append(f"  {t.method} → {t.to_state}")
+            if wf.timeline_fields:
+                parts.append(f"  Dates: {', '.join(wf.timeline_fields)}")
         parts.append("")
 
-        for model in kg.models:
-            if model.is_extension and len(model.fields) < 3:
+    # Relations — how models connect
+    if biz.dependency_graph.relations:
+        parts.append("=== RELATIONS ===")
+        seen: set[str] = set()
+        for rel in biz.dependency_graph.relations:
+            key = f"{rel.source}.{rel.field}"
+            if key in seen:
                 continue
+            seen.add(key)
+            req = " (required)" if rel.required else ""
+            parts.append(f"  {rel.source}.{rel.field} → {rel.target} [{rel.type}]{req}")
+        parts.append("")
 
-            label = "[EXT]" if model.is_extension else ""
-            parts.append(f"### {model.name} {label}")
-            if model.description:
-                parts.append(f"Description: {model.description}")
+    # Field intents — grouped by intent
+    if biz.field_intents:
+        parts.append("=== CHAMPS PAR INTENTION BUSINESS ===")
+        intents: dict[str, list[str]] = {}
+        for fi in biz.field_intents:
+            intents.setdefault(fi.intent, []).append(f"{fi.model}.{fi.name}")
+        for intent, fields in sorted(intents.items()):
+            parts.append(f"  {intent.upper()}: {', '.join(fields[:8])}")
+        parts.append("")
 
-            # Selection fields — show the states/options
-            for fname, f in model.fields.items():
-                if f.type == "selection" and isinstance(f.selection, list) and len(f.selection) > 0:
-                    opts = ", ".join(
-                        str(s[0]) if isinstance(s, list) else str(s) for s in f.selection[:8]
-                    )
-                    parts.append(f"  STATE {fname}: {opts}")
+    # Auto Q&A — the most actionable for LLM
+    if biz.auto_qa:
+        parts.append("=== QUESTIONS AUTO-GENEREES ===")
+        for qa in biz.auto_qa[:10]:
+            parts.append(f"  Q: {qa.question}")
+            parts.append(f"  → {qa.model} {qa.domain_filter} [{qa.method}]")
+            if qa.fields:
+                parts.append(f"  → champs: {', '.join(qa.fields)}")
+        parts.append("")
 
-            # Top fields
+    # Computed fields — automation capabilities
+    if biz.dependency_graph.computed_fields:
+        parts.append("=== CHAMPS CALCULES (automatisation) ===")
+        for model_name, fields in list(biz.dependency_graph.computed_fields.items())[:5]:
+            parts.append(f"  {model_name}: {', '.join(fields[:5])}")
+        parts.append("")
+
+    # Key models with top fields (compact)
+    parts.append("=== MODELES PRINCIPAUX ===")
+    for kg in kgs:
+        for model in kg.models:
+            if model.is_extension or len(model.fields) < 5:
+                continue
             fields_meta = {
                 f.name: {"type": f.type, "required": f.required} for f in model.fields.values()
             }
-            top = select_top_fields(fields_meta, top_n=10)
-
-            for fname in top:
-                if fname not in model.fields:
-                    continue
-                f = model.fields[fname]
-                extras: list[str] = []
-                if f.required:
-                    extras.append("required")
-                if f.compute:
-                    extras.append(f"compute={f.compute}")
-                if f.relation:
-                    extras.append(f"-> {f.relation}")
-                if f.related:
-                    extras.append(f"related={f.related}")
-                info = f" ({', '.join(extras)})" if extras else ""
-                parts.append(f"  - {fname}: {f.type}{info}")
-
-            parts.append("")
-
-        # Actions — include all, they tell the story
-        if kg.action_methods:
-            parts.append("Actions:")
-            for a in kg.action_methods[:15]:
-                parts.append(f"  - {a.model}.{a.name}")
-
-        # Onchange methods
-        if kg.onchange_methods:
-            parts.append("Onchange:")
-            for o in kg.onchange_methods[:10]:
-                parts.append(f"  - {o.method_name} (fields: {o.fields})")
-
-        # Constraints
-        if kg.python_constraints:
-            parts.append("Constraints Python:")
-            for c in kg.python_constraints[:5]:
-                parts.append(f"  - {c.method_name}: fields={c.fields}")
-
-        if kg.sql_constraints:
-            parts.append("Constraints SQL:")
-            for sc in kg.sql_constraints[:5]:
-                parts.append(f"  - {sc.name}: {sc.message}")
-
-        parts.append("")
+            top = select_top_fields(fields_meta, top_n=7)
+            top_str = ", ".join(top)
+            parts.append(f"  {model.name} ({len(model.fields)} champs): {top_str}")
 
     return "\n".join(parts)
 

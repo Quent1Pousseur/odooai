@@ -63,7 +63,7 @@ async def generate_ba_profile(
 
     domain_name = DOMAIN_NAMES.get(domain_id, domain_id)
     modules_covered = [kg.manifest.technical_name for kg in kgs]
-    kg_summary = build_kg_summary(kgs)
+    kg_summary = build_kg_summary(kgs, domain_id=domain_id)
 
     logger.info("Generating BA Profile", domain=domain_id, modules=modules_covered)
 

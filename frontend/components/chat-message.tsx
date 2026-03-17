@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { DashboardArtifact, tryParseDashboard } from "./dashboard-artifact";
 
 interface Message {
   role: "user" | "assistant";
@@ -90,6 +91,13 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
 
+  // Detect dashboard artifacts
+  const parsed = !isUser ? tryParseDashboard(message.content) : null;
+  const hasDashboard = parsed?.dashboard != null;
+  const markdownContent = hasDashboard
+    ? (parsed!.before + "\n" + parsed!.after).trim()
+    : message.content;
+
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content);
     setCopied(true);
@@ -138,6 +146,9 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
             <div className="text-sm leading-relaxed">{message.content}</div>
           ) : (
             <div className="text-sm leading-relaxed">
+              {hasDashboard && parsed?.dashboard && (
+                <DashboardArtifact data={parsed.dashboard} />
+              )}
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
@@ -254,7 +265,7 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
                   ),
                 }}
               >
-                {message.content}
+                {markdownContent}
               </ReactMarkdown>
               {isStreaming && <span className="animate-pulse text-primary ml-0.5">|</span>}
             </div>

@@ -19,7 +19,7 @@ from odooai.knowledge.code_analyst.method_analyzer import (
 )
 from odooai.knowledge.code_analyst.python_parser import parse_python_file
 from odooai.knowledge.code_analyst.xml_parser import parse_access_csv, parse_xml_file
-from odooai.knowledge.schemas.actions import ActionMethod
+from odooai.knowledge.schemas.actions import ActionMethod, MethodActionFlow, MethodEffect
 from odooai.knowledge.schemas.constraints import OnchangeMethod, PythonConstraint, SqlConstraint
 from odooai.knowledge.schemas.index import KnowledgeIndex, ModuleEntry, ModuleKnowledgeGraph
 from odooai.knowledge.schemas.menus import MenuItem
@@ -95,7 +95,8 @@ def analyze_module(module_path: Path) -> ModuleKnowledgeGraph | None:
                     update={"selection": resolved},
                 )
 
-    # Analyze method bodies for action flows (results used by business_extractor)
+    # Analyze method bodies for action flows
+    action_flows: list[MethodActionFlow] = []
     for py_file in _find_python_files(module_path):
         try:
             primary_model = module_name
@@ -103,7 +104,26 @@ def analyze_module(module_path: Path) -> ModuleKnowledgeGraph | None:
                 if not mdl.is_extension:
                     primary_model = mdl.name
                     break
-            analyze_file_methods(py_file, primary_model)
+            method_results = analyze_file_methods(py_file, primary_model)
+            for mr in method_results:
+                action_flows.append(
+                    MethodActionFlow(
+                        method_name=mr.name,
+                        model=mr.model,
+                        effects=[
+                            MethodEffect(
+                                type=e.type,
+                                target_model=e.target_model,
+                                field=e.field,
+                                value=e.value,
+                                via_method=e.via_method,
+                            )
+                            for e in mr.effects
+                        ],
+                        calls=mr.calls,
+                        env_refs=mr.env_refs,
+                    )
+                )
         except Exception:
             pass
 
@@ -151,6 +171,7 @@ def analyze_module(module_path: Path) -> ModuleKnowledgeGraph | None:
         python_constraints=py_constraints,
         onchange_methods=onchanges,
         action_methods=actions,
+        action_flows=action_flows,
         access_rights=access_rights,
         record_rules=rules,
         security_groups=groups,

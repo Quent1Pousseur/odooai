@@ -6,7 +6,7 @@ Dependencies: pydantic
 
 from pydantic import BaseModel
 
-from odooai.knowledge.schemas.actions import ActionMethod
+from odooai.knowledge.schemas.actions import ActionMethod, MethodActionFlow
 from odooai.knowledge.schemas.constraints import OnchangeMethod, PythonConstraint, SqlConstraint
 from odooai.knowledge.schemas.manifest import ModuleManifest
 from odooai.knowledge.schemas.menus import MenuItem
@@ -24,6 +24,7 @@ class ModuleKnowledgeGraph(BaseModel, frozen=True):
     python_constraints: list[PythonConstraint] = []
     onchange_methods: list[OnchangeMethod] = []
     action_methods: list[ActionMethod] = []
+    action_flows: list[MethodActionFlow] = []  # What actions DO (method body analysis)
     access_rights: list[AccessRight] = []
     record_rules: list[RecordRule] = []
     security_groups: list[SecurityGroup] = []

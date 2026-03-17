@@ -1,8 +1,15 @@
 # OdooAI — Instructions Claude Code
 
+## Protocole de demarrage (LIRE EN PREMIER)
+1. Lire **SESSION_STATE.md** — etat complet du projet en 2 min
+2. Lire **PROCESS.md** — comment le projet fonctionne
+3. Faire le **daily matin** avec le template docs/hr/session-checklist.md
+4. Verifier les CRs de formation + R&D de la session precedente (Section 0)
+5. ENSUITE seulement — commencer a travailler
+
 ## Projet
-OdooAI est un Business Analyst IA qui a lu chaque ligne du code source Odoo.
-SaaS-first, closed source, concurrent de prodooctivity (pas un fork).
+OdooAI est un BUDDY de travail IA pour Odoo — pas un consultant.
+SaaS-first, closed source. Le buddy aide au quotidien : reporting, configuration, exploration, challenge.
 
 ## Stack
 - **Backend**: Python 3.11+, FastAPI (uvicorn), SQLAlchemy (async), Pydantic v2
@@ -84,3 +91,4 @@ make run             # uvicorn dev server :8000
 - **BUDGET TRACKER** : docs/governance/budget-tracker.md. CFO chaque semaine.
 - **TEMPLATES OBLIGATOIRES** : tout fichier suit le template de son type (docs/TEMPLATES.md). Review rejetee si non-conforme.
 - **PROCESS.md** : le document central. Si un process n'est pas dans PROCESS.md, il n'existe pas.
+- **SESSION_STATE.md** : mis a jour A CHAQUE FIN DE SESSION. C'est le contexte pour la prochaine session. Si je ne le mets pas a jour, la prochaine session perd le contexte.

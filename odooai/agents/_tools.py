@@ -44,10 +44,13 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "- hr.employee: employees\n"
             "- purchase.order: purchase orders\n"
             "- crm.lead: CRM opportunities\n\n"
-            "TIPS:\n"
-            "- If unsure about fields, call odoo_fields_get first\n"
-            "- Use limit to avoid fetching too many records\n"
-            "- For Many2one fields, Odoo returns [id, name]"
+            "WORKFLOW — follow these steps:\n"
+            "1. If unsure about fields → call odoo_fields_get first\n"
+            "2. Search with a broad filter → refine if too many results\n"
+            "3. If search returns nothing → try different field names "
+            "or broader domain\n"
+            "4. For Many2one fields, Odoo returns [id, name]\n"
+            "5. Max 50 records per call — use limit wisely"
         ),
         "input_schema": {
             "type": "object",

@@ -13,6 +13,8 @@ import re
 import structlog
 
 from odooai.knowledge.schemas.business import (
+    ActionEffect,
+    ActionFlow,
     AutoQAPair,
     BusinessSummary,
     BusinessWorkflow,
@@ -71,6 +73,7 @@ def extract_business(
     This is the reverse engineering engine: code → business logic.
     """
     workflows = _extract_workflows(kgs)
+    action_flows = _extract_action_flows(kgs)
     graph = _extract_dependency_graph(kgs)
     intents = _classify_fields(kgs)
     qa = _generate_qa_pairs(kgs, workflows)
@@ -79,6 +82,7 @@ def extract_business(
         "Business extracted",
         domain=domain_id,
         workflows=len(workflows),
+        action_flows=len(action_flows),
         relations=len(graph.relations),
         intents=len(intents),
         qa_pairs=len(qa),
@@ -87,6 +91,7 @@ def extract_business(
     return BusinessSummary(
         domain_id=domain_id,
         workflows=workflows,
+        action_flows=action_flows,
         dependency_graph=graph,
         field_intents=intents,
         auto_qa=qa,
@@ -121,10 +126,29 @@ def _extract_workflows(kgs: list[ModuleKnowledgeGraph]) -> list[BusinessWorkflow
             if not states:
                 continue
 
-            # Find action methods for this model
+            # Build transitions from KG action_flows (real effects)
             transitions: list[StateTransition] = []
+            flow_methods_used: set[str] = set()
+            model_flows = [f for f in kg.action_flows if f.model == model.name]
+            for flow in model_flows:
+                for effect in flow.effects:
+                    if effect.type == "state_change" and effect.value in states:
+                        from_st = effect.field if effect.field != "state" else "*"
+                        transitions.append(
+                            StateTransition(
+                                from_state=from_st,
+                                to_state=effect.value,
+                                method=flow.method_name,
+                                model=model.name,
+                            )
+                        )
+                        flow_methods_used.add(flow.method_name)
+
+            # Fallback: infer from method names for actions without flows
             model_actions = [a for a in kg.action_methods if a.model == model.name]
             for action in model_actions:
+                if action.name in flow_methods_used:
+                    continue
                 target = _infer_target_state(action.name, states)
                 if target:
                     transitions.append(
@@ -155,6 +179,44 @@ def _extract_workflows(kgs: list[ModuleKnowledgeGraph]) -> list[BusinessWorkflow
             )
 
     return workflows
+
+
+def _extract_action_flows(kgs: list[ModuleKnowledgeGraph]) -> list[ActionFlow]:
+    """Convert KG MethodActionFlows into business ActionFlows."""
+    flows: list[ActionFlow] = []
+
+    for kg in kgs:
+        for maf in kg.action_flows:
+            effects: list[ActionEffect] = []
+            for eff in maf.effects:
+                effects.append(
+                    ActionEffect(
+                        type=eff.type,
+                        target_model=eff.target_model,
+                        field=eff.field,
+                        value=eff.value,
+                        via_method=eff.via_method,
+                    )
+                )
+            # Add env_refs as env_ref effects
+            for ref in maf.env_refs:
+                effects.append(
+                    ActionEffect(
+                        type="env_ref",
+                        target_model=ref,
+                    )
+                )
+
+            flows.append(
+                ActionFlow(
+                    trigger_model=maf.model,
+                    trigger_method=maf.method_name,
+                    effects=effects,
+                    calls_methods=maf.calls,
+                )
+            )
+
+    return flows
 
 
 def _infer_target_state(method_name: str, available_states: list[str]) -> str:

@@ -36,6 +36,21 @@ def build_kg_summary(kgs: list[ModuleKnowledgeGraph], domain_id: str = "") -> st
                 parts.append(f"  Dates: {', '.join(wf.timeline_fields)}")
         parts.append("")
 
+    # Action flows — what each action DOES
+    if biz.action_flows:
+        parts.append("=== ACTION FLOWS ===")
+        for af in biz.action_flows:
+            parts.append(f"{af.trigger_model}.{af.trigger_method}:")
+            state_changes = [e for e in af.effects if e.type == "state_change"]
+            for sc in state_changes:
+                parts.append(f"  → state_change: {sc.field} = {sc.value}")
+            if af.calls_methods:
+                parts.append(f"  → calls: {', '.join(af.calls_methods)}")
+            env_refs = [e.target_model for e in af.effects if e.type == "env_ref"]
+            if env_refs:
+                parts.append(f"  → refs: {', '.join(env_refs)}")
+        parts.append("")
+
     # Relations — how models connect
     if biz.dependency_graph.relations:
         parts.append("=== RELATIONS ===")

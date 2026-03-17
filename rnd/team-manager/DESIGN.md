@@ -331,6 +331,54 @@ Claude Code : `python team.py session-end --commits 15 --tests 230`
 
 ---
 
+## Regles de priorite et conflits
+
+### Hierarchie d'activite
+```
+TACHE DIRECTE (sprint) > R&D (lead) > R&D (contributeur) > LEARNING
+```
+
+Un agent ne peut avoir qu'UN status actif. La priorite haute preempte la basse.
+
+### Conflits geres par le systeme
+
+| Situation | Comportement |
+|-----------|-------------|
+| Propose lead R&D mais agent en tache | **REFUSE** — suggere des agents dispos avec skills similaires |
+| Propose contributeur R&D mais agent en tache | **ACCEPTE** — contributeur aide quand dispo |
+| Agent finit sa tache et a un R&D en attente | **AUTO** — passe en status rnd |
+| Tache urgente assignee a un lead R&D | **PREEMPTE** — R&D passe en pause, alerte |
+| Lead R&D absent > 2 sessions | **ALERTE** — propose transfert de lead |
+| Agent sans rien (pas tache, pas R&D, pas learning) | **BLOQUE** — session-start refuse de continuer |
+
+### Validation des assignations
+```bash
+team.py assign 37 --task 42
+  → Verifie : agent 37 est-il disponible ?
+    → Si en tache : REFUSE (deja assigne)
+    → Si en R&D : ACCEPTE (tache > R&D, R&D passe en pause)
+    → Si en learning : ACCEPTE (tache > learning)
+    → Si disponible : ACCEPTE
+
+team.py rnd --propose "Projet" --lead 37
+  → Verifie : agent 37 est-il disponible ?
+    → Si en tache : REFUSE + suggestions d'agents dispos
+    → Si en R&D autre : REFUSE (deja lead d'un projet)
+    → Si en learning : ACCEPTE (R&D > learning)
+    → Si disponible : ACCEPTE
+```
+
+### Cascade automatique quand une tache se termine
+```
+Agent finit sa tache
+  → A-t-il un projet R&D actif ? → OUI → status = rnd
+  → NON → A-t-il un learning en cours ? → OUI → status = learning
+  → NON → status = available
+  → session-start signale "Agent X disponible, assigner une activite"
+```
+
+---
+
 ## MVP — Ce qu'on code en premier
 
 Phase 1 : Schema + seed data (48 agents)

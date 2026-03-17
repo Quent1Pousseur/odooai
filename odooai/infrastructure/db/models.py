@@ -30,6 +30,24 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 
 
+class OdooConnection(Base):
+    """A saved Odoo instance connection (credentials encrypted)."""
+
+    __tablename__ = "odoo_connections"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    url: Mapped[str] = mapped_column(String(500), nullable=False)
+    db_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    login: Mapped[str] = mapped_column(String(255), nullable=False)
+    api_key_encrypted: Mapped[str] = mapped_column(Text, nullable=False)
+    odoo_version: Mapped[str] = mapped_column(String(20), default="")
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False)
+    last_connected_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+
+
 class Conversation(Base):
     """A chat conversation."""
 

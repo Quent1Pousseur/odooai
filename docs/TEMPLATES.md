@@ -77,16 +77,28 @@ S (< 1 jour) | M (1-3 jours) | L (3+ jours)
 ```markdown
 # Session — YYYY-MM-DD (Session N)
 
-## SECTION 0 — Verification CRs Formation
-| Agent en formation hier | CR depose ? | Fichier |
-|------------------------|-------------|---------|
+## SECTION 0 — Verification CRs / R&D
+| Agent | Activite hier | Livrable depose ? | Fichier |
+|-------|--------------|-------------------|---------|
+| [agents en formation/R&D hier] | learning/R&D | oui/non | docs/learning/ ou docs/rnd/ |
 
 ## SECTION 1 — Zero Inactivite
 | # | Agent | Activite | Type |
 |---|-------|----------|------|
 | 01-48 | ... | ... | tache / aide / R&D / formation |
 
-## SECTION 2 — Bloquants
+## SECTION 2 — Agents sans tache — Attribution R&D / Learning
+**Chaque agent sans tache le dit et choisit MAINTENANT :**
+
+| Agent | Choix | Projet/Sujet | Equipe |
+|-------|-------|-------------|--------|
+| [agent] | R&D / Learning | [nom] | [solo ou avec qui] |
+
+**Nouveaux projets R&D proposes :**
+| Projet | Pitch (2 min) | Lead | Equipe | Validation CTO |
+|--------|--------------|------|--------|----------------|
+
+## SECTION 3 — Bloquants
 [Ce qui bloque]
 
 ## SECTION 3 — Challenges inter-agents

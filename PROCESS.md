@@ -104,27 +104,108 @@ Tout le monde le lit. Personne n'y deroge.
 
 ## 4. Que faire quand je n'ai pas de tache ?
 
-**Cascade — dans cet ordre :**
+### Etape 1 — Le dire au meeting
+
+Au debut de chaque session, chaque agent sans tache **le dit explicitement** :
+- "Je n'ai pas de tache directe ce sprint"
+- "J'ai fini ma tache, je suis disponible"
+
+**Ne JAMAIS rester silencieux.** Le silence = inactivite = inacceptable.
+
+### Etape 2 — Choisir une activite (au meeting, devant tout le monde)
 
 ```
-1. Tache directe ?     → OUI → travailler dessus
-                       → NON ↓
-2. Aider un collegue ? → OUI → pair programming, review, support
-                       → NON ↓
-3. Projet R&D ?        → OUI → avancer le projet (docs/rnd/NN-projet.md)
-                       → NON ↓
-4. Se former           → Choisir un sujet utile au projet
-                         Produire un CR (docs/learning/sprintN/NN-sujet.md)
-                         Presenter au partage learning en fin de session
+Option A : Aider un collegue → pair programming, review, support
+Option B : Rejoindre un projet R&D existant → voir docs/rnd/
+Option C : Proposer un NOUVEAU projet R&D → pitcher au meeting
+Option D : Se former → choisir un sujet, produire un learning CR
 ```
 
-**R&D passe AVANT la formation.** Un agent avec un projet R&D actif n'a pas besoin de faire de learning.
+**L'activite est decidee PENDANT le meeting**, pas apres. Tout le monde sait qui fait quoi.
 
-**Exemples de projets R&D :** prototyper une feature, tester un outil, benchmarker une technologie, creer un POC.
+### Etape 3 — Produire un livrable
 
-**Exemples de formation :** etudier un pattern, lire une doc, analyser un concurrent, apprendre un framework.
+A la fin de la session, l'agent a produit :
+- Du code, une review, ou de l'aide → livrable dans le rapport d'activite
+- Un avancement R&D → mise a jour du fichier docs/rnd/NN-projet.md
+- Un CR de formation → fichier dans docs/learning/sprintN/
 
-**Regle** : a la fin de chaque session, l'agent a produit soit du code, soit une review, soit un avancement R&D, soit un CR de formation. JAMAIS rien.
+**JAMAIS rien.** Pas d'exception.
+
+---
+
+## 5. Cellule R&D — Projets internes
+
+### Qu'est-ce qu'un projet R&D ?
+
+Un mini-projet interne qui peut servir a OdooAI. C'est l'application concrete de ce que les agents apprennent dans leurs formations.
+
+**Exemples :**
+- Un agent a appris OpenTelemetry → il prototype l'integration dans le backend
+- Un agent a etudie les PWA → il cree le manifest + service worker
+- Deux agents ont etudie le meme sujet → ils codent un POC ensemble
+
+### Comment lancer un projet R&D
+
+**1. Proposition au meeting** (obligatoire)
+L'agent pitch son projet en 2 minutes pendant la session :
+- Quel probleme ca resout ?
+- Quel est le MVP ?
+- Combien de temps ca prend ?
+- Qui d'autre veut participer ?
+
+**2. Validation par le CTO ou le fondateur**
+- "Go" → le projet demarre
+- "Pas maintenant" → l'agent fait un learning a la place
+- "Bonne idee mais modifie X" → ajustement et go
+
+**3. Formation de l'equipe R&D**
+Plusieurs agents sans tache peuvent rejoindre le meme projet :
+- 1 lead (celui qui a propose) → responsable du livrable
+- 1-3 contributeurs → selon disponibilite
+- Le lead attribue les sous-taches
+
+**4. Documentation**
+Chaque projet a un fichier `docs/rnd/NN-nom-projet.md` (template dans docs/TEMPLATES.md) :
+- Objectif, plan, equipe, avancement par session
+- Mis a jour a chaque session de travail
+
+**5. Livraison**
+L'objectif de chaque projet R&D est un **MVP fonctionnel** :
+- Un prototype qui marche
+- Une demo ou un benchmark
+- Un document technique avec recommandations
+
+**6. Evaluation (a chaque retro)**
+Le CTO et le fondateur evaluent :
+- **Adopt** → le projet devient une spec pour le prochain sprint
+- **Continue** → le projet avance encore
+- **Pause** → priorite autre, on reprend plus tard
+- **Kill** → le projet n'a pas d'avenir
+
+### Regles R&D
+
+| Regle | Detail |
+|-------|--------|
+| Pas de projet solo secret | Tout est propose au meeting |
+| MVP obligatoire | Pas de prototype eternel — un MVP en 1-2 sprints max |
+| Documentation a jour | Le fichier rnd/ est mis a jour a CHAQUE session |
+| Budget max $50/sprint | Les couts LLM/API doivent etre approuves par le CFO |
+| Code dans une branche | Si du code est produit, branche git separee |
+| Show & Tell | Chaque projet R&D est presente au Show & Tell du sprint |
+
+### Idees de projets R&D (inspirees des learnings)
+
+| Source learning | Projet R&D possible | Agents potentiels |
+|----------------|--------------------|--------------------|
+| OpenTelemetry (38) | Dashboard metriques temps reel | Observability + Frontend |
+| PWA (39) | App mobile installable | Mobile + Frontend |
+| Typing indicators (43) | ToolCallCard anime avec Framer Motion | Chat Eng + Brand Designer |
+| Eval framework (28) | Auto-scoring LLM avec ML | Data Scientist + Prompt Eng |
+| Workflow parsing (10) | State machines dans les KG | Odoo Expert + Data Eng |
+| SEO content (37) | Generateur d'articles depuis les KG | Content Strat + AI Eng |
+| Community bot (47) | Bot Discord pour beta users | Community Mgr + Chat Eng |
+| Alembic async (30) | Migration PostgreSQL complete | DBA + Senior Backend |
 
 ---
 

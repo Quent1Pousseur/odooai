@@ -54,8 +54,12 @@ export default function ChatPage() {
       if (!res.ok) return;
       const connections = await res.json();
       if (connections.length > 0) {
-        // Auto-connect to the first (or default) saved connection
         const conn = connections.find((c: any) => c.is_default) || connections[0];
+        // Test the connection before marking as connected
+        const testRes = await fetch(`${API_URL}/api/connections/${conn.id}/test`, { method: "POST" });
+        if (!testRes.ok) return;
+        const testData = await testRes.json();
+        if (testData.status !== "ok") return;
         setOdooCreds({
           url: conn.url,
           db: conn.db_name,

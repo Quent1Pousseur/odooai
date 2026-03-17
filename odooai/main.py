@@ -116,7 +116,7 @@ def create_app() -> FastAPI:
     origins = (
         ["https://odooai.com", "https://www.odooai.com"]
         if settings.is_production
-        else ["http://localhost:3000"]
+        else ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"]
     )
     application.add_middleware(
         CORSMiddleware,

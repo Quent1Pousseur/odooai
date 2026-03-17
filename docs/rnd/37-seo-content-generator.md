@@ -35,3 +35,8 @@ Script qui genere 5 articles de blog a partir de 5 questions + KG du module sale
 - Donnees extraites : noms de champs, types, compute methods, help texts, relations, selections — tout vient du KG
 - Output dans `rnd/seo-content-generator/output/`
 - Prochaine etape : ajouter support multi-modules, templates configurables, scoring de pertinence des champs
+
+### Session 3 (2026-03-22)
+- 5 articles produced from real KG data
+- Script supports --module, --questions, --dry-run CLI
+- Next: multi-module support, template system

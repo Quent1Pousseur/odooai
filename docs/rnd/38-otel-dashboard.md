@@ -34,3 +34,8 @@ Page /dashboard avec 5 compteurs qui se rafraichissent en temps reel.
 - Error banner si API injoignable
 - Standalone : copiable dans `frontend/app/dashboard/page.tsx` pour adoption
 - Prochaine etape : charts historiques (sparklines) si adopte
+
+### Session 3 (2026-03-22)
+- Dashboard page functional with 11 metric cards
+- Auto-refresh 5s with status indicator
+- Next: copy to frontend/app/dashboard/ for adoption review

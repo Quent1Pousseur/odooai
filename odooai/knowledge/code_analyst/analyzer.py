@@ -13,6 +13,10 @@ from pathlib import Path
 import structlog
 
 from odooai.knowledge.code_analyst.manifest_parser import parse_manifest
+from odooai.knowledge.code_analyst.method_analyzer import (
+    analyze_file_methods,
+    resolve_selection_constants,
+)
 from odooai.knowledge.code_analyst.python_parser import parse_python_file
 from odooai.knowledge.code_analyst.xml_parser import parse_access_csv, parse_xml_file
 from odooai.knowledge.schemas.actions import ActionMethod
@@ -66,6 +70,42 @@ def analyze_module(module_path: Path) -> ModuleKnowledgeGraph | None:
                 path=str(py_file),
                 error=str(exc),
             )
+
+    # Phase 2: Resolve selection constants + analyze method bodies
+    all_constants: dict[str, list[list[str]]] = {}
+    for py_file in _find_python_files(module_path):
+        try:
+            constants = resolve_selection_constants(py_file)
+            all_constants.update(constants)
+        except Exception:
+            pass
+
+    # Resolve selection fields that reference constants
+    for model in models:
+        for _fname, fdef in model.fields.items():
+            if (
+                fdef.type == "selection"
+                and isinstance(fdef.selection, str)
+                and fdef.selection in all_constants
+            ):
+                # Replace constant reference with actual values
+                resolved = all_constants[fdef.selection]
+                # Create new field with resolved selection
+                model.fields[_fname] = fdef.model_copy(
+                    update={"selection": resolved},
+                )
+
+    # Analyze method bodies for action flows (results used by business_extractor)
+    for py_file in _find_python_files(module_path):
+        try:
+            primary_model = module_name
+            for mdl in models:
+                if not mdl.is_extension:
+                    primary_model = mdl.name
+                    break
+            analyze_file_methods(py_file, primary_model)
+        except Exception:
+            pass
 
     # Parse XML files
     views: list[ViewDefinition] = []

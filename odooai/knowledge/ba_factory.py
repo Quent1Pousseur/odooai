@@ -75,7 +75,7 @@ async def generate_ba_profile(
     client = anthropic.Anthropic(api_key=anthropic_api_key)
     response = client.messages.create(
         model=model,
-        max_tokens=4096,
+        max_tokens=8192,
         system=system_msg,
         messages=user_messages,  # type: ignore[arg-type]
     )

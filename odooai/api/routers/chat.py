@@ -67,11 +67,20 @@ async def _stream_response(request: ChatRequest) -> Any:
     odoo_client = None
     odoo_uid = 0
     real_odoo_api_key = ""
-    if request.odoo_url and request.odoo_db and request.odoo_api_key:
+    odoo_requested = bool(request.odoo_url and request.odoo_db and request.odoo_api_key)
+    if odoo_requested:
         odoo_client, odoo_uid, real_odoo_api_key = await _connect_odoo(request)
 
-    # Send "thinking" event
-    yield _sse_event({"type": "status", "content": "Recherche en cours..."})
+    # If Odoo was expected but failed — tell user immediately
+    if odoo_requested and odoo_client is None:
+        yield _sse_event(
+            {
+                "type": "error",
+                "content": "Impossible de se connecter a votre Odoo. "
+                "Verifiez que votre instance est demarree et accessible.",
+            }
+        )
+        return
 
     try:
         from odooai.agents._streaming import stream_ba_response

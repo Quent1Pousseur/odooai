@@ -48,16 +48,18 @@ async def stream_ba_response(
     """
     import anthropic
 
-    context = _build_profile_context(profile, question=question)
-    user_message = f"""Contexte du domaine "{profile.domain_name}" :
-
-{context}
-
-Question de l'utilisateur :
-{question}"""
-
     client = anthropic.Anthropic(api_key=anthropic_api_key)
     tools = TOOL_DEFINITIONS if odoo_client is not None else []
+
+    # Only inject BA context when NOT connected (no tools)
+    if tools:
+        user_message = question
+    else:
+        context = _build_profile_context(profile, question=question)
+        user_message = f"""Contexte Odoo :
+{context}
+
+{question}"""
 
     # Build messages with conversation history
     messages: list[dict[str, Any]] = []
